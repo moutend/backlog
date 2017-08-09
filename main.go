@@ -30,13 +30,38 @@ func run(args []string) (err error) {
 	query := url.Values{
 		"count": []string{"10"},
 	}
-	if issues, err = client.Issues(query); err != nil {
+	if issues, err = client.GetIssues(query); err != nil {
 		return
 	}
 
-	JST, _ := time.LoadLocation("Asia/Tokyo")
+	issuesMap := make(map[int]*backlog.Issue)
+	timezone, _ := time.LoadLocation("Asia/Tokyo")
+
 	for _, issue := range issues {
-		fmt.Println(issue.Summary, issue.Created.Time().In(JST))
+		issuesMap[issue.Id] = issue
+	}
+	for _, issue := range issues {
+		var parentIssue *backlog.Issue
+
+		if issue.ParentIssueId != 0 {
+			parentIssue, _ = issuesMap[issue.ParentIssueId]
+		}
+
+		fmt.Printf("# [%s] %s\n\n", issue.IssueType.Name, issue.Summary)
+
+		if parentIssue != nil {
+			fmt.Println("- 親課題: ", parentIssue.Summary, parentIssue.Id)
+		}
+		if issue.ParentIssueId != 0 && parentIssue == nil {
+			fmt.Println("- 親課題: ", issue.ParentIssueId)
+		}
+
+		fmt.Println("- 状態:", issue.Status.Name)
+		fmt.Println("- 作成者:", issue.CreatedUser.Name)
+		fmt.Println("- 作成日時:", issue.Created.Time().In(timezone))
+		fmt.Println("- 更新日時:", issue.Updated.Time().In(timezone))
+
+		fmt.Println("\n", issue.Description, "\n")
 	}
 
 	return
