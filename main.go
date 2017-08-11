@@ -1,14 +1,48 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
-	"time"
 
-	"github.com/moutend/backlog"
+	"github.com/ericaro/frontmatter"
+	"github.com/moutend/go-backlog"
 )
+
+func parseMarkdown(filename string) (values url.Values, err error) {
+	type FrontmatterOption struct {
+		ProjectId     string `fm:"projectId"`
+		IssueTypeId   string `fm:"issueTypeId"`
+		PriorityId    string `fm:"priorityId"`
+		ParentIssueId string `fm:"parentIssueId"`
+		Summary       string `fm:"summary"`
+		Description   string `fm:"content"`
+	}
+
+	var file []byte
+	if file, err = ioutil.ReadFile(filename); err != nil {
+		return
+	}
+
+	fo := &FrontmatterOption{}
+	if err = frontmatter.Unmarshal(file, fo); err != nil {
+		return
+	}
+	values = url.Values{}
+	values.Add("projectId", fo.ProjectId)
+	values.Add("issueTypeId", fo.IssueTypeId)
+	values.Add("priorityId", fo.PriorityId)
+	values.Add("summary", fo.Summary)
+	values.Add("description", fo.Description)
+
+	if fo.ParentIssueId != "" {
+		values.Add("parentIssueId", fo.ParentIssueId)
+	}
+	return
+}
 
 func main() {
 	var err error
@@ -19,50 +53,102 @@ func main() {
 }
 
 func run(args []string) (err error) {
+	if len(args) < 2 {
+		return HelpCommand(args)
+	}
+	switch args[1] {
+	case "v":
+		err = VersionCommand(args)
+	case "version":
+		err = VersionCommand(args)
+	case "h":
+		err = HelpCommand(args)
+	case "help":
+		err = HelpCommand(args)
+	case "p":
+		err = PostCommand(args)
+	case "post":
+		err = PostCommand(args)
+	case "l":
+		err = ListCommand(args)
+	case "list":
+		err = ListCommand(args)
+	default:
+		fmt.Fprintf(os.Stderr, "%s: '%s' is not a %s subcommand.\n", args[0], args[1], args[0])
+	}
+	return
+}
+
+func ListCommand(args []string) (err error) {
 	var client *backlog.Client
-
-	if client, err = backlog.New("abby", os.Getenv("BACKLOG_TOKEN")); err != nil {
+	if client, err = backlog.New(os.Getenv("BACKLOG_SPACE"), os.Getenv("BACKLOG_TOKEN")); err != nil {
 		return
 	}
 
-	var issues []*backlog.Issue
+	//client.SetLogger(log.New(os.Stdout, "debug: ", 0))
 
-	query := url.Values{
-		"count": []string{"10"},
+	var projects []*backlog.Project
+	if projects, err = client.GetProjects(nil); err != nil {
+		return
 	}
-	if issues, err = client.GetIssues(query); err != nil {
+	for _, project := range projects {
+		fmt.Printf("- %v (id:%v)\n", project.Name, project.Id)
+
+		query := url.Values{}
+		query.Add("projectId[]", fmt.Sprintf("%v", project.Id))
+		query.Add("count", "100")
+
+		var issues []*backlog.Issue
+		if issues, err = client.GetIssues(query); err != nil {
+			return
+		}
+		for _, issue := range issues {
+			fmt.Printf("  - [%v %v] %v by @%v (id:%v)\n", issue.Status.Name, issue.IssueType.Name, issue.Summary, issue.CreatedUser.Name, issue.Id)
+		}
+	}
+
+	return
+}
+
+func PostCommand(args []string) (err error) {
+	var debugFlag bool
+
+	f := flag.NewFlagSet(fmt.Sprintf("%s %s", args[0], args[1]), flag.ExitOnError)
+	f.BoolVar(&debugFlag, "debug", false, "Enable debug output.")
+	f.Parse(args[2:])
+	args = f.Args()
+
+	if len(args) < 1 {
 		return
 	}
 
-	issuesMap := make(map[int]*backlog.Issue)
-	timezone, _ := time.LoadLocation("Asia/Tokyo")
-
-	for _, issue := range issues {
-		issuesMap[issue.Id] = issue
-	}
-	for _, issue := range issues {
-		var parentIssue *backlog.Issue
-
-		if issue.ParentIssueId != 0 {
-			parentIssue, _ = issuesMap[issue.ParentIssueId]
-		}
-
-		fmt.Printf("# [%s] %s\n\n", issue.IssueType.Name, issue.Summary)
-
-		if parentIssue != nil {
-			fmt.Println("- 親課題: ", parentIssue.Summary, parentIssue.Id)
-		}
-		if issue.ParentIssueId != 0 && parentIssue == nil {
-			fmt.Println("- 親課題: ", issue.ParentIssueId)
-		}
-
-		fmt.Println("- 状態:", issue.Status.Name)
-		fmt.Println("- 作成者:", issue.CreatedUser.Name)
-		fmt.Println("- 作成日時:", issue.Created.Time().In(timezone))
-		fmt.Println("- 更新日時:", issue.Updated.Time().In(timezone))
-
-		fmt.Println("\n", issue.Description, "\n")
+	var values url.Values
+	if values, err = parseMarkdown(args[0]); err != nil {
+		return
 	}
 
+	var client *backlog.Client
+	if client, err = backlog.New(os.Getenv("BACKLOG_SPACE"), os.Getenv("BACKLOG_TOKEN")); err != nil {
+		return
+	}
+	if debugFlag {
+		client.SetLogger(log.New(os.Stdout, "debug: ", 0))
+	}
+
+	var issue *backlog.Issue
+	if issue, err = client.CreateIssue(values); err != nil {
+		return
+	}
+
+	fmt.Printf("post: [%v %v] %v by @%v (id:%v)\n", issue.Status.Name, issue.IssueType.Name, issue.Summary, issue.CreatedUser.Name, issue.Id)
+
+	return
+}
+
+func VersionCommand(args []string) (err error) {
+	return
+}
+
+func HelpCommand(args []string) (err error) {
 	return
 }
