@@ -134,56 +134,63 @@ func main() {
 	return
 }
 
-func run(args []string) (err error) {
+func run(args []string) error {
 	if len(args) < 2 {
 		return HelpCommand(args)
 	}
 	switch args[1] {
 	case "v":
-		err = VersionCommand(args)
+		return VersionCommand(args)
 	case "version":
-		err = VersionCommand(args)
+		return VersionCommand(args)
 	case "h":
-		err = HelpCommand(args)
+		return HelpCommand(args)
 	case "help":
-		err = HelpCommand(args)
-	case "l":
-		err = ListCommand(args)
-	case "list":
-		err = ListCommand(args)
-	case "c":
-		err = CreateIssueCommand(args)
-	case "create":
-		err = CreateIssueCommand(args)
-	case "u":
-		err = UpdateIssueCommand(args)
-	case "update":
-		err = UpdateIssueCommand(args)
-	default:
-		fmt.Fprintf(os.Stderr, "%s: '%s' is not a %s subcommand.\n", args[0], args[1], args[0])
+		return HelpCommand(args)
 	}
-	return
-}
 
-func ListCommand(args []string) (err error) {
+	var client *backlog.Client
+	var err error
 	var debugFlag bool
 
 	f := flag.NewFlagSet(fmt.Sprintf("%s %s", args[0], args[1]), flag.ExitOnError)
 	f.BoolVar(&debugFlag, "debug", false, "Enable debug output.")
 	f.Parse(args[2:])
+	command := args[1]
 	args = f.Args()
 
-	var client *backlog.Client
 	if client, err = backlog.New(os.Getenv("BACKLOG_SPACE"), os.Getenv("BACKLOG_TOKEN")); err != nil {
-		return
+		return err
 	}
 	if debugFlag {
 		client.SetLogger(log.New(os.Stdout, "debug: ", 0))
 	}
+	switch command {
+	case "l":
+		return ListCommand(client, args)
+	case "list":
+		return ListCommand(client, args)
+	case "p":
+		return CreateIssueCommand(client, args)
+	case "post":
+		return CreateIssueCommand(client, args)
+	case "c":
+		return CreateIssueCommand(client, args)
+	case "create":
+		return CreateIssueCommand(client, args)
+	case "u":
+		return UpdateIssueCommand(client, args)
+	case "update":
+		return UpdateIssueCommand(client, args)
+	default:
+		return fmt.Errorf("%s is not a subcommand", command)
+	}
+}
 
-	var projects []*backlog.Project
-	if projects, err = client.GetProjects(nil); err != nil {
-		return
+func ListCommand(client *backlog.Client, args []string) error {
+	projects, err := client.GetProjects(nil)
+	if err != nil {
+		return nil
 	}
 	for _, project := range projects {
 		fmt.Printf("- %v (id:%v)\n", project.Name, project.Id)
@@ -192,33 +199,19 @@ func ListCommand(args []string) (err error) {
 		query.Add("projectId[]", fmt.Sprintf("%v", project.Id))
 		query.Add("count", "100")
 
-		var issues []*backlog.Issue
-		if issues, err = client.GetIssues(query); err != nil {
-			return
+		issues, err := client.GetIssues(query)
+		if err != nil {
+			return err
 		}
 		for _, issue := range issues {
 			fmt.Printf("  - [%v %v] %v by @%v (id:%v)\n", issue.Status.Name, issue.IssueType.Name, issue.Summary, issue.CreatedUser.Name, issue.Id)
 		}
 	}
 
-	return
+	return nil
 }
 
-func CreateIssueCommand(args []string) error {
-	var debugFlag bool
-
-	f := flag.NewFlagSet(fmt.Sprintf("%s %s", args[0], args[1]), flag.ExitOnError)
-	f.BoolVar(&debugFlag, "debug", false, "Enable debug output.")
-	f.Parse(args[2:])
-	args = f.Args()
-
-	client, err := backlog.New(os.Getenv("BACKLOG_SPACE"), os.Getenv("BACKLOG_TOKEN"))
-	if err != nil {
-		return err
-	}
-	if debugFlag {
-		client.SetLogger(log.New(os.Stdout, "debug: ", 0))
-	}
+func CreateIssueCommand(client *backlog.Client, args []string) error {
 	if len(args) < 1 {
 		return nil
 	}
@@ -227,7 +220,6 @@ func CreateIssueCommand(args []string) error {
 	if err != nil {
 		return err
 	}
-
 	delete(values, "statusId")
 	issue, err := client.CreateIssue(values)
 	if err != nil {
@@ -239,33 +231,23 @@ func CreateIssueCommand(args []string) error {
 	return nil
 }
 
-func UpdateIssueCommand(args []string) error {
-	var debugFlag bool
-	var issueIdFlag int
-
-	f := flag.NewFlagSet(fmt.Sprintf("%s %s", args[0], args[1]), flag.ExitOnError)
-	f.BoolVar(&debugFlag, "debug", false, "Enable debug output.")
-	f.IntVar(&issueIdFlag, "i", 0, "specify issue ID")
-	f.Parse(args[2:])
-	args = f.Args()
-
-	client, err := backlog.New(os.Getenv("BACKLOG_SPACE"), os.Getenv("BACKLOG_TOKEN"))
-	if err != nil {
-		return err
-	}
-	if debugFlag {
-		client.SetLogger(log.New(os.Stdout, "debug: ", 0))
-	}
-	if len(args) < 1 {
+func UpdateIssueCommand(client *backlog.Client, args []string) error {
+	if len(args) < 2 {
 		return nil
 	}
 
-	values, err := parseMarkdown(client, args[0])
+	values, err := parseMarkdown(client, args[1])
 	if err != nil {
 		return err
 	}
+
 	delete(values, "projectId")
-	issue, err := client.SetIssue(issueIdFlag, values)
+
+	issueId, err := strconv.Atoi(args[0])
+	if err != nil {
+		return err
+	}
+	issue, err := client.SetIssue(issueId, values)
 	if err != nil {
 		return err
 	}
@@ -282,5 +264,21 @@ func VersionCommand(args []string) error {
 }
 
 func HelpCommand(args []string) error {
+	fmt.Println(`usage: backlog <command> [options]
+
+Commands:
+  c, create
+    Create an issue with given markdown file.
+  p, post
+    Alias of 'create' command.
+    u, update
+      Replace existing issue with given markdown file.
+  l, list
+    List projects and its issues.
+  v, version
+    Print version and revision info.
+  h, help
+    Print this message.`)
+
 	return nil
 }
