@@ -181,14 +181,14 @@ func run(args []string) error {
 		return CreateIssueCommand(client, args)
 	case "post":
 		return CreateIssueCommand(client, args)
-	case "c":
-		return CreateIssueCommand(client, args)
-	case "create":
-		return CreateIssueCommand(client, args)
 	case "d":
 		return DeleteIssueCommand(client, args)
 	case "delete":
 		return DeleteIssueCommand(client, args)
+	case "g":
+		return GetIssueCommand(client, args)
+	case "get":
+		return GetIssueCommand(client, args)
 	case "u":
 		return UpdateIssueCommand(client, args)
 	case "update":
@@ -262,6 +262,35 @@ func DeleteIssueCommand(client *backlog.Client, args []string) error {
 	return nil
 }
 
+func GetIssueCommand(client *backlog.Client, args []string) error {
+	if len(args) < 1 {
+		return nil
+	}
+
+	issueId, err := strconv.Atoi(args[0])
+	if err != nil {
+		return err
+	}
+
+	issue, err := client.GetIssue(issueId)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("---")
+	fmt.Println("summary:", issue.Summary)
+	fmt.Println("status:", issue.Status.Name)
+	fmt.Println("priority:", issue.Priority.Name)
+	fmt.Println("assignee:", issue.Assignee.Name)
+	fmt.Println("created:", issue.CreatedUser.Name)
+	fmt.Println("start:", issue.StartDate)
+	fmt.Println("due:", issue.DueDate)
+	fmt.Println("---")
+	fmt.Println(issue.Description)
+
+	return nil
+}
+
 func UpdateIssueCommand(client *backlog.Client, args []string) error {
 	if len(args) < 2 {
 		return nil
@@ -298,14 +327,14 @@ func HelpCommand(args []string) error {
 	fmt.Println(`usage: backlog <command> [options]
 
 Commands:
-  c, create
-    Create an issue with given markdown file.
   p, post
-    Alias of 'create' command.
+    Create an issue with given markdown file.
+  g, get
+    Print detail of the specific issue.
   u, update
       Replace existing issue with given markdown file.
     d, delete
-      Delete issue by ID.
+      Delete specific issue.
   l, list
     List projects and its issues.
   v, version
