@@ -178,6 +178,10 @@ func run(args []string) error {
 		return CreateIssueCommand(client, args)
 	case "create":
 		return CreateIssueCommand(client, args)
+	case "d":
+		return DeleteIssueCommand(client, args)
+	case "delete":
+		return DeleteIssueCommand(client, args)
 	case "u":
 		return UpdateIssueCommand(client, args)
 	case "update":
@@ -231,6 +235,26 @@ func CreateIssueCommand(client *backlog.Client, args []string) error {
 	return nil
 }
 
+func DeleteIssueCommand(client *backlog.Client, args []string) error {
+	if len(args) < 1 {
+		return nil
+	}
+
+	issueId, err := strconv.Atoi(args[0])
+	if err != nil {
+		return err
+	}
+
+	issue, err := client.DeleteIssue(issueId)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(issue.Id)
+
+	return nil
+}
+
 func UpdateIssueCommand(client *backlog.Client, args []string) error {
 	if len(args) < 2 {
 		return nil
@@ -271,8 +295,10 @@ Commands:
     Create an issue with given markdown file.
   p, post
     Alias of 'create' command.
-    u, update
+  u, update
       Replace existing issue with given markdown file.
+    d, delete
+      Delete issue by ID.
   l, list
     List projects and its issues.
   v, version
