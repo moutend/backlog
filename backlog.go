@@ -61,19 +61,20 @@ func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) 
 	wg.Wait()
 
 	type frontmatterOption struct {
-		Project     string `fm:"project"`
-		ProjectId   string `fm:"projectid"`
-		IssueType   string `fm:"issuetype"`
-		IssueTypeId string `fm:"issuetypeid"`
-		Priority    string `fm:"priority"`
-		PriorityId  string `fm:"priorityid"`
-		Status      string `fm:"status"`
-		StatusId    string `fm:"statusid"`
-
-		ParentIssue   string `fm:"parent"`
-		ParentIssueId string `fm:"parentid"`
-		Summary       string `fm:"summary"`
-		Description   string `fm:"content"`
+		Project        string `fm:"project"`
+		ProjectId      string `fm:"projectid"`
+		IssueType      string `fm:"issuetype"`
+		IssueTypeId    string `fm:"issuetypeid"`
+		Priority       string `fm:"priority"`
+		PriorityId     string `fm:"priorityid"`
+		Status         string `fm:"status"`
+		StatusId       string `fm:"statusid"`
+		ParentIssue    string `fm:"parent"`
+		ParentIssueId  string `fm:"parentid"`
+		EstimatedHours string `fm"estimated"`
+		ActualHours    string `fm"actual"`
+		Summary        string `fm:"summary"`
+		Description    string `fm:"content"`
 	}
 	file, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -91,7 +92,7 @@ func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) 
 	if fo.ProjectId != "" {
 		values.Add("projectId", fo.ProjectId)
 	} else if fo.Project != "" {
-		values.Add("projectId", strconv.Itoa(projectNameToId[fo.Project]))
+		values.Add("projectId", strconv.Itoa(int(projectNameToId[fo.Project])))
 	} else {
 		return nil, fmt.Errorf("specify project or projectid")
 	}
@@ -118,6 +119,12 @@ func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) 
 	}
 	if fo.ParentIssueId != "" {
 		values.Add("parentIssueId", fo.ParentIssueId)
+	}
+	if fo.EstimatedHours != "" {
+		values.Add("estimatedHours", fo.EstimatedHours)
+	}
+	if fo.ActualHours != "" {
+		values.Add("actualHours", fo.ActualHours)
 	}
 
 	values.Add("summary", fo.Summary)
