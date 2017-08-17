@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/ericaro/frontmatter"
 	"github.com/moutend/go-backlog"
@@ -26,6 +27,7 @@ func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) 
 	projectNameToId := make(map[string]int)
 	issueTypeNameToId := make(map[string]int)
 	statusNameToId := make(map[string]int)
+	myselfId := ""
 
 	wg.Add(1)
 	go func() {
@@ -58,6 +60,13 @@ func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) 
 		wg.Done()
 	}()
 
+	wg.Add(1)
+	go func() {
+		myself, _ := client.GetMyself()
+		myselfId = strconv.Itoa(myself.Id)
+		wg.Done()
+	}()
+
 	wg.Wait()
 
 	type frontmatterOption struct {
@@ -73,6 +82,7 @@ func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) 
 		ParentIssueId  string `fm:"parentid"`
 		EstimatedHours string `fm"estimated"`
 		ActualHours    string `fm"actual"`
+		DueDate        string `fo:"due"`
 		Summary        string `fm:"summary"`
 		Description    string `fm:"content"`
 	}
@@ -126,7 +136,12 @@ func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) 
 	if fo.ActualHours != "" {
 		values.Add("actualHours", fo.ActualHours)
 	}
+	if fo.DueDate != "" {
+		values.Add("dueDate", fo.DueDate)
+	}
 
+	values.Add("assigneeId", myselfId)
+	values.Add("startDate", time.Now().Format("2006-01-02"))
 	values.Add("summary", fo.Summary)
 	values.Add("description", fo.Description)
 
@@ -162,9 +177,10 @@ func run(args []string) error {
 
 	f := flag.NewFlagSet(fmt.Sprintf("%s %s", args[0], args[1]), flag.ExitOnError)
 	f.BoolVar(&debugFlag, "debug", false, "Enable debug output.")
-	f.Parse(args[2:])
-	command := args[1]
+	f.Parse(args[1:])
 	args = f.Args()
+	command := args[0]
+	args = args[1:]
 
 	if client, err = backlog.New(os.Getenv("BACKLOG_SPACE"), os.Getenv("BACKLOG_TOKEN")); err != nil {
 		return err
