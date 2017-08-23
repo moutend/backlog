@@ -209,6 +209,10 @@ func run(args []string) error {
 		return UpdateIssueCommand(client, args)
 	case "update":
 		return UpdateIssueCommand(client, args)
+	case "c":
+		return GetCommentsCommand(client, args)
+	case "comments":
+		return GetCommentsCommand(client, args)
 	default:
 		return fmt.Errorf("%s is not a subcommand", command)
 	}
@@ -299,7 +303,10 @@ func GetIssueCommand(client *backlog.Client, args []string) error {
 	fmt.Println("priority:", issue.Priority.Name)
 	fmt.Println("assignee:", issue.Assignee.Name)
 	fmt.Println("created:", issue.CreatedUser.Name)
+	fmt.Println("start:", issue.StartDate)
 	fmt.Println("due:", issue.DueDate)
+	fmt.Println("estimated:", issue.EstimatedHours)
+	fmt.Println("actual:", issue.ActualHours)
 	fmt.Println("---")
 	fmt.Println(issue.Description)
 
@@ -332,6 +339,28 @@ func UpdateIssueCommand(client *backlog.Client, args []string) error {
 	return nil
 }
 
+func GetCommentsCommand(client *backlog.Client, args []string) error {
+	if len(args) < 1 {
+		return nil
+	}
+
+	issueId, err := strconv.Atoi(args[0])
+	if err != nil {
+		return err
+	}
+
+	value := url.Values{}
+	value.Add("count", "50")
+	comments, err := client.GetComments(issueId, value)
+	if err != nil {
+		return err
+	}
+
+	for _, comment := range comments {
+		fmt.Println(comment)
+	}
+	return nil
+}
 func VersionCommand(args []string) error {
 	fmt.Printf("%v-%v\n", version, revision)
 
