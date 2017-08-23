@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	version  = "dev"
-	revision = "latest"
+	version   = "dev"
+	revision  = "latest"
+	spaceName string
 )
 
 func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) {
@@ -181,8 +182,8 @@ func run(args []string) error {
 	args = f.Args()
 	command := args[0]
 	args = args[1:]
-
-	if client, err = backlog.New(os.Getenv("BACKLOG_SPACE"), os.Getenv("BACKLOG_TOKEN")); err != nil {
+	spaceName = os.Getenv("BACKLOG_SPACE")
+	if client, err = backlog.New(spaceName, os.Getenv("BACKLOG_TOKEN")); err != nil {
 		return err
 	}
 	if debugFlag {
@@ -307,6 +308,7 @@ func GetIssueCommand(client *backlog.Client, args []string) error {
 	fmt.Println("due:", issue.DueDate)
 	fmt.Println("estimated:", issue.EstimatedHours)
 	fmt.Println("actual:", issue.ActualHours)
+	fmt.Printf("url: https://%s.backlog.jp/view/%s\n", spaceName, issue.IssueKey)
 	fmt.Println("---")
 	fmt.Println(issue.Description)
 
@@ -357,7 +359,14 @@ func GetCommentsCommand(client *backlog.Client, args []string) error {
 	}
 
 	for _, comment := range comments {
-		fmt.Println(comment)
+		if len(comment.ChangeLog) > 0 {
+			fmt.Println(comment.CreatedUser.Name, "が課題の内容を変更しました。")
+			for _, change := range comment.ChangeLog {
+				fmt.Println("  ", change.Field, change.OriginalValue, "->", change.NewValue)
+			}
+		} else {
+			fmt.Println(comment.CreatedUser.Name, comment.Content)
+		}
 	}
 	return nil
 }
