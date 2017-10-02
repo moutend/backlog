@@ -126,7 +126,6 @@ func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) 
 	} else {
 		return nil, fmt.Errorf("specify status or statusid")
 	}
-	fmt.Println("@@@", fo.ParentIssueId)
 	if fo.ParentIssueId != "" {
 		values.Add("parentIssueId", fo.ParentIssueId)
 	}
@@ -320,8 +319,6 @@ func UpdateIssueCommand(client *backlog.Client, args []string) error {
 	}
 
 	values, err := parseMarkdown(client, args[1])
-	fmt.Printf("%+v\n", values)
-	return nil
 	if err != nil {
 		return err
 	}
