@@ -79,8 +79,7 @@ func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) 
 		PriorityId    string `fm:"priorityid"`
 		Status        string `fm:"status"`
 		StatusId      string `fm:"statusid"`
-		ParentIssue   string `fm:"parent"`
-		ParentIssueId string `fm:"parentid"`
+		ParentIssueId string `fm:"parentissueid"`
 		Estimated     string `fm:"estimated"`
 		Actual        string `fm:"actual"`
 		Due           string `fm:"due"`
@@ -91,7 +90,6 @@ func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) 
 	if err != nil {
 		return nil, err
 	}
-
 	fo := &frontmatterOption{}
 	err = frontmatter.Unmarshal(file, fo)
 	if err != nil {
@@ -128,6 +126,7 @@ func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) 
 	} else {
 		return nil, fmt.Errorf("specify status or statusid")
 	}
+	fmt.Println("@@@", fo.ParentIssueId)
 	if fo.ParentIssueId != "" {
 		values.Add("parentIssueId", fo.ParentIssueId)
 	}
@@ -145,7 +144,6 @@ func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) 
 	values.Add("startDate", time.Now().Format("2006-01-02"))
 	values.Add("summary", fo.Summary)
 	values.Add("description", fo.Description)
-
 	return values, nil
 }
 
@@ -300,6 +298,7 @@ func GetIssueCommand(client *backlog.Client, args []string) error {
 
 	fmt.Println("---")
 	fmt.Println("summary:", issue.Summary)
+	fmt.Println("parentid:", issue.ParentIssueId)
 	fmt.Println("status:", issue.Status.Name)
 	fmt.Println("priority:", issue.Priority.Name)
 	fmt.Println("assignee:", issue.Assignee.Name)
@@ -321,6 +320,8 @@ func UpdateIssueCommand(client *backlog.Client, args []string) error {
 	}
 
 	values, err := parseMarkdown(client, args[1])
+	fmt.Printf("%+v\n", values)
+	return nil
 	if err != nil {
 		return err
 	}
