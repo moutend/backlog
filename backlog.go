@@ -297,7 +297,7 @@ func GetIssueCommand(client *backlog.Client, args []string) error {
 
 	fmt.Println("---")
 	fmt.Println("summary:", issue.Summary)
-	fmt.Println("parentid:", issue.ParentIssueId)
+	fmt.Println("parentissueid:", issue.ParentIssueId)
 	fmt.Println("status:", issue.Status.Name)
 	fmt.Println("priority:", issue.Priority.Name)
 	fmt.Println("assignee:", issue.Assignee.Name)
