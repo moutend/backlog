@@ -19,9 +19,10 @@ var (
 	version   = "dev"
 	revision  = "latest"
 	spaceName string
+	client    *backlog.Client
 )
 
-func parseMarkdown(client *backlog.Client, filename string) (url.Values, error) {
+func parseMarkdown(filename string) (url.Values, error) {
 	var wg sync.WaitGroup
 
 	priorityNameToId := make(map[string]int)
@@ -169,7 +170,6 @@ func run(args []string) error {
 		return HelpCommand(args)
 	}
 
-	var client *backlog.Client
 	var err error
 	var debugFlag bool
 
@@ -188,35 +188,35 @@ func run(args []string) error {
 	}
 	switch command {
 	case "l":
-		return ListCommand(client, args)
+		return ListCommand(args)
 	case "list":
-		return ListCommand(client, args)
+		return ListCommand(args)
 	case "p":
-		return CreateIssueCommand(client, args)
+		return CreateIssueCommand(args)
 	case "post":
-		return CreateIssueCommand(client, args)
+		return CreateIssueCommand(args)
 	case "d":
-		return DeleteIssueCommand(client, args)
+		return DeleteIssueCommand(args)
 	case "delete":
-		return DeleteIssueCommand(client, args)
+		return DeleteIssueCommand(args)
 	case "g":
-		return GetIssueCommand(client, args)
+		return GetIssueCommand(args)
 	case "get":
-		return GetIssueCommand(client, args)
+		return GetIssueCommand(args)
 	case "u":
-		return UpdateIssueCommand(client, args)
+		return UpdateIssueCommand(args)
 	case "update":
-		return UpdateIssueCommand(client, args)
+		return UpdateIssueCommand(args)
 	case "c":
-		return GetCommentsCommand(client, args)
+		return GetCommentsCommand(args)
 	case "comments":
-		return GetCommentsCommand(client, args)
+		return GetCommentsCommand(args)
 	default:
 		return fmt.Errorf("%s is not a subcommand", command)
 	}
 }
 
-func ListCommand(client *backlog.Client, args []string) error {
+func ListCommand(args []string) error {
 	projects, err := client.GetProjects(nil)
 	if err != nil {
 		return nil
@@ -240,12 +240,12 @@ func ListCommand(client *backlog.Client, args []string) error {
 	return nil
 }
 
-func CreateIssueCommand(client *backlog.Client, args []string) error {
+func CreateIssueCommand(args []string) error {
 	if len(args) < 1 {
 		return nil
 	}
 
-	values, err := parseMarkdown(client, args[0])
+	values, err := parseMarkdown(args[0])
 	if err != nil {
 		return err
 	}
@@ -260,7 +260,7 @@ func CreateIssueCommand(client *backlog.Client, args []string) error {
 	return nil
 }
 
-func DeleteIssueCommand(client *backlog.Client, args []string) error {
+func DeleteIssueCommand(args []string) error {
 	if len(args) < 1 {
 		return nil
 	}
@@ -280,7 +280,7 @@ func DeleteIssueCommand(client *backlog.Client, args []string) error {
 	return nil
 }
 
-func GetIssueCommand(client *backlog.Client, args []string) error {
+func GetIssueCommand(args []string) error {
 	if len(args) < 1 {
 		return nil
 	}
@@ -313,12 +313,12 @@ func GetIssueCommand(client *backlog.Client, args []string) error {
 	return nil
 }
 
-func UpdateIssueCommand(client *backlog.Client, args []string) error {
+func UpdateIssueCommand(args []string) error {
 	if len(args) < 2 {
 		return nil
 	}
 
-	values, err := parseMarkdown(client, args[1])
+	values, err := parseMarkdown(args[1])
 	if err != nil {
 		return err
 	}
@@ -339,7 +339,7 @@ func UpdateIssueCommand(client *backlog.Client, args []string) error {
 	return nil
 }
 
-func GetCommentsCommand(client *backlog.Client, args []string) error {
+func GetCommentsCommand(args []string) error {
 	if len(args) < 1 {
 		return nil
 	}
