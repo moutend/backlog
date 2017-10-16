@@ -285,12 +285,7 @@ func GetIssueCommand(args []string) error {
 		return nil
 	}
 
-	issueId, err := strconv.Atoi(args[0])
-	if err != nil {
-		return err
-	}
-
-	issue, err := client.GetIssue(issueId)
+	issue, err := client.GetIssue(args[0])
 	if err != nil {
 		return err
 	}
