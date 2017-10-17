@@ -320,11 +320,7 @@ func UpdateIssueCommand(args []string) error {
 
 	delete(values, "projectId")
 
-	issueId, err := strconv.Atoi(args[0])
-	if err != nil {
-		return err
-	}
-	issue, err := client.SetIssue(issueId, values)
+	issue, err := client.SetIssue(args[0], values)
 	if err != nil {
 		return err
 	}
