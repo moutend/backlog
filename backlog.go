@@ -335,14 +335,9 @@ func GetCommentsCommand(args []string) error {
 		return nil
 	}
 
-	issueId, err := strconv.Atoi(args[0])
-	if err != nil {
-		return err
-	}
-
 	value := url.Values{}
 	value.Add("count", "50")
-	comments, err := client.GetComments(issueId, value)
+	comments, err := client.GetComments(args[0], value)
 	if err != nil {
 		return err
 	}
