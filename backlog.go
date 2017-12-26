@@ -27,7 +27,7 @@ func parseMarkdown(filename string) (url.Values, error) {
 
 	priorityNameToId := make(map[string]int)
 	projectNameToId := make(map[string]int)
-	issueTypeNameToId := make(map[string]int)
+	issueTypeNameToId := make(map[string]map[string]int)
 	statusNameToId := make(map[string]int)
 	myselfId := ""
 
@@ -55,8 +55,9 @@ func parseMarkdown(filename string) (url.Values, error) {
 		for _, project := range projects {
 			projectNameToId[project.Name] = project.Id
 			issueTypes, _ := client.GetIssueTypes(project.Id)
+			issueTypeNameToId[project.Name] = make(map[string]int)
 			for _, issueType := range issueTypes {
-				issueTypeNameToId[issueType.Name] = issueType.Id
+				issueTypeNameToId[project.Name][issueType.Name] = issueType.Id
 			}
 		}
 		wg.Done()
@@ -109,7 +110,7 @@ func parseMarkdown(filename string) (url.Values, error) {
 	if fo.IssueTypeId != "" {
 		values.Add("issueTypeId", fo.IssueTypeId)
 	} else if fo.IssueType != "" {
-		values.Add("issueTypeId", strconv.Itoa(issueTypeNameToId[fo.IssueType]))
+		values.Add("issueTypeId", strconv.Itoa(issueTypeNameToId[fo.Project][fo.IssueType]))
 	} else {
 		return nil, fmt.Errorf("specify type or typeid")
 	}
@@ -217,6 +218,20 @@ func run(args []string) error {
 }
 
 func ListCommand(args []string) error {
+	var isAssignedToMe bool
+	var myself *backlog.User
+
+	f := flag.NewFlagSet("list", flag.ExitOnError)
+	f.BoolVar(&isAssignedToMe, "assigned-to-me", false, "get tasks which assigned to me")
+	f.BoolVar(&isAssignedToMe, "m", false, "get tasks which assigned to me")
+	f.Parse(args)
+	args = f.Args()
+
+	myself, err := client.GetMyself()
+	if err != nil {
+		return err
+	}
+
 	projects, err := client.GetProjects(nil)
 	if err != nil {
 		return nil
@@ -227,13 +242,15 @@ func ListCommand(args []string) error {
 		query := url.Values{}
 		query.Add("projectId[]", fmt.Sprintf("%v", project.Id))
 		query.Add("count", "100")
-
+		if isAssignedToMe {
+			query.Add("assigneeId[]", fmt.Sprintf("%v", myself.Id))
+		}
 		issues, err := client.GetIssues(query)
 		if err != nil {
 			return err
 		}
 		for _, issue := range issues {
-			fmt.Printf("  - [%v %v] %v by @%v (id:%v)\n", issue.Status.Name, issue.IssueType.Name, issue.Summary, issue.CreatedUser.Name, issue.Id)
+			fmt.Printf("  - [%v %v] %v by @%v (id:%v)\n", issue.Status.Name, issue.IssueType.Name, issue.Summary, issue.CreatedUser.Name, issue.IssueKey)
 		}
 	}
 
@@ -293,6 +310,7 @@ func GetIssueCommand(args []string) error {
 	fmt.Println("---")
 	fmt.Println("summary:", issue.Summary)
 	fmt.Println("parentissueid:", issue.ParentIssueId)
+	fmt.Println("issuetype:", issue.IssueType.Name)
 	fmt.Println("status:", issue.Status.Name)
 	fmt.Println("priority:", issue.Priority.Name)
 	fmt.Println("assignee:", issue.Assignee.Name)
