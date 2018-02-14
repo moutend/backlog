@@ -148,6 +148,73 @@ func parseMarkdown(filename string) (url.Values, error) {
 	return values, nil
 }
 
+func parseMarkdownForPR(filename string) (url.Values, error) {
+	var wg sync.WaitGroup
+
+	projectNameToId := make(map[string]int)
+	myselfId := ""
+
+	wg.Add(1)
+	go func() {
+		projects, _ := client.GetProjects(nil)
+		for _, project := range projects {
+			projectNameToId[project.Name] = project.Id
+		}
+		wg.Done()
+	}()
+
+	wg.Add(1)
+	go func() {
+		myself, _ := client.GetMyself()
+		myselfId = strconv.Itoa(myself.Id)
+		wg.Done()
+	}()
+
+	wg.Wait()
+
+	type frontmatterOption struct {
+		Summary     string `fo:"summary"`
+		IssueKey    string `fo:"issuekey"`
+		Repository  string `fo:"repository"`
+		Base        string `fo:"base"`
+		Branch      string `fo:"branch"`
+		Project     string `fm:"project"`
+		ProjectId   string `fm:"projectid"`
+		Description string `fm:"content"`
+	}
+	file, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	fo := &frontmatterOption{}
+	err = frontmatter.Unmarshal(file, fo)
+	if err != nil {
+		return nil, err
+	}
+
+	values := url.Values{}
+
+	if fo.ProjectId != "" {
+		values.Add("projectId", fo.ProjectId)
+	} else if fo.Project != "" {
+		values.Add("projectId", strconv.Itoa(int(projectNameToId[fo.Project])))
+	} else {
+		return nil, fmt.Errorf("specify project or projectid")
+	}
+	values.Add("assigneeId", myselfId)
+	values.Add("summary", fo.Summary)
+	values.Add("repositoryId", fo.Repository)
+	values.Add("description", fo.Description)
+
+	issue, err := client.GetIssue(fo.IssueKey)
+	if err != nil {
+		return nil, err
+	}
+	values.Add("issueKey", fmt.Sprintf("%v", issue.Id))
+
+	return values, nil
+}
+
 func main() {
 	var err error
 	if err = run(os.Args); err != nil {
@@ -192,6 +259,10 @@ func run(args []string) error {
 		return ListCommand(args)
 	case "list":
 		return ListCommand(args)
+	case "lpr":
+		return ListPullRequestsCommand(args)
+	case "apr":
+		return AddPullRequestCommand(args)
 	case "p":
 		return CreateIssueCommand(args)
 	case "post":
@@ -215,6 +286,45 @@ func run(args []string) error {
 	default:
 		return fmt.Errorf("%s is not a subcommand", command)
 	}
+}
+
+func ListPullRequestsCommand(args []string) error {
+	f := flag.NewFlagSet("list", flag.ExitOnError)
+	f.Parse(args)
+	args = f.Args()
+
+	projects, err := client.GetProjects(nil)
+	if err != nil {
+		return nil
+	}
+	for _, project := range projects {
+		fmt.Printf("- %v (id:%v)\n", project.Name, project.Id)
+		projectId := fmt.Sprintf("%v", project.Id)
+		repos, err := client.GetRepositories(projectId, nil)
+		if err != nil {
+			return err
+		}
+		for _, repo := range repos {
+			fmt.Println(repo.Name)
+			query := url.Values{}
+			query.Add("count", "100")
+			repositoryId := fmt.Sprintf("%v", repo.Id)
+			count, err := client.GetPullRequestsCount(projectId, repositoryId, nil)
+			if err != nil {
+				return err
+			}
+			fmt.Println(count)
+			pullRequests, err := client.GetPullRequests(projectId, repositoryId, query)
+			if err != nil {
+				return err
+			}
+			for _, pullRequest := range pullRequests {
+				fmt.Printf("[%v #%v] %v (%v -> %v)\n", pullRequest.Status.Name, pullRequest.Number, pullRequest.Summary, pullRequest.Branch, pullRequest.Base)
+			}
+		}
+	}
+
+	return nil
 }
 
 func ListCommand(args []string) error {
@@ -245,12 +355,13 @@ func ListCommand(args []string) error {
 		if isAssignedToMe {
 			query.Add("assigneeId[]", fmt.Sprintf("%v", myself.Id))
 		}
+		query.Add("sort", "updated")
 		issues, err := client.GetIssues(query)
 		if err != nil {
 			return err
 		}
 		for _, issue := range issues {
-			fmt.Printf("  - [%v %v] %v by @%v (id:%v)\n", issue.Status.Name, issue.IssueType.Name, issue.Summary, issue.CreatedUser.Name, issue.IssueKey)
+			fmt.Printf("  - [%v %v] %v by @%v (id:%v) %v\n", issue.Status.Name, issue.IssueType.Name, issue.Summary, issue.CreatedUser.Name, issue.IssueKey, issue.StartDate)
 		}
 	}
 
@@ -273,6 +384,28 @@ func CreateIssueCommand(args []string) error {
 	}
 
 	fmt.Println(issue.Id)
+
+	return nil
+}
+
+func AddPullRequestCommand(args []string) error {
+	if len(args) < 1 {
+		return nil
+	}
+
+	values, err := parseMarkdownForPR(args[0])
+	if err != nil {
+		return err
+	}
+	projectId := values.Get("projectId")
+	repositoryId := values.Get("repositoryId")
+	values.Del("repositoryId")
+	pullRequest, err := client.CreatePullRequest(projectId, repositoryId, values)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(pullRequest.Id)
 
 	return nil
 }
