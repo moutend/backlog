@@ -203,6 +203,8 @@ func parseMarkdownForPR(filename string) (url.Values, error) {
 	}
 	values.Add("assigneeId", myselfId)
 	values.Add("summary", fo.Summary)
+	values.Add("branch", fo.Branch)
+	values.Add("base", fo.Base)
 	values.Add("repositoryId", fo.Repository)
 	values.Add("description", fo.Description)
 
@@ -210,7 +212,7 @@ func parseMarkdownForPR(filename string) (url.Values, error) {
 	if err != nil {
 		return nil, err
 	}
-	values.Add("issueKey", fmt.Sprintf("%v", issue.Id))
+	values.Add("issueId", fmt.Sprintf("%v", issue.Id))
 
 	return values, nil
 }
@@ -399,6 +401,7 @@ func AddPullRequestCommand(args []string) error {
 	}
 	projectId := values.Get("projectId")
 	repositoryId := values.Get("repositoryId")
+	values.Del("projectId")
 	values.Del("repositoryId")
 	pullRequest, err := client.CreatePullRequest(projectId, repositoryId, values)
 	if err != nil {
@@ -427,6 +430,66 @@ func DeleteIssueCommand(args []string) error {
 
 	fmt.Println(issue.Id)
 
+	return nil
+}
+
+func GetPullRequestCommand(args []string) error {
+	if len(args) < 1 {
+		return nil
+	}
+
+	projects, err := client.GetProjects(nil)
+	if err != nil {
+		return nil
+	}
+	for _, project := range projects {
+		fmt.Printf("- %v (id:%v)\n", project.Name, project.Id)
+		projectId := fmt.Sprintf("%v", project.Id)
+		repos, err := client.GetRepositories(projectId, nil)
+		if err != nil {
+			return err
+		}
+		for _, repo := range repos {
+			fmt.Println(repo.Name)
+			query := url.Values{}
+			query.Add("count", "100")
+			repositoryId := fmt.Sprintf("%v", repo.Id)
+			count, err := client.GetPullRequestsCount(projectId, repositoryId, nil)
+			if err != nil {
+				return err
+			}
+			fmt.Println(count)
+			pullRequests, err := client.GetPullRequests(projectId, repositoryId, query)
+			if err != nil {
+				return err
+			}
+			for _, pullRequest := range pullRequests {
+				fmt.Printf("[%v #%v] %v (%v -> %v)\n", pullRequest.Status.Name, pullRequest.Number, pullRequest.Summary, pullRequest.Branch, pullRequest.Base)
+			}
+		}
+	}
+	/*
+		pullRequest, err := client.GetPullRequest(projectId, repositoryId, number)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("---")
+		fmt.Println("summary:", issue.Summary)
+		fmt.Println("parentissueid:", issue.ParentPullRequestId)
+		fmt.Println("issuetype:", issue.PullRequestType.Name)
+		fmt.Println("status:", issue.Status.Name)
+		fmt.Println("priority:", issue.Priority.Name)
+		fmt.Println("assignee:", issue.Assignee.Name)
+		fmt.Println("created:", issue.CreatedUser.Name)
+		fmt.Println("start:", issue.StartDate)
+		fmt.Println("due:", issue.DueDate)
+		fmt.Println("estimated:", issue.EstimatedHours)
+		fmt.Println("actual:", issue.ActualHours)
+		fmt.Printf("url: https://%s.backlog.jp/view/%s\n", spaceName, issue.PullRequestKey)
+		fmt.Println("---")
+		fmt.Println(issue.Description)
+	*/
 	return nil
 }
 
