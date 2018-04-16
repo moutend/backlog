@@ -337,11 +337,13 @@ func ListPullRequestsCommand(args []string) error {
 
 func ListCommand(args []string) error {
 	var isAssignedToMe bool
+	var statusFlag string
 	var myself *backlog.User
 
 	f := flag.NewFlagSet("list", flag.ExitOnError)
 	f.BoolVar(&isAssignedToMe, "assigned-to-me", false, "get tasks which assigned to me")
 	f.BoolVar(&isAssignedToMe, "m", false, "get tasks which assigned to me")
+	f.StringVar(&statusFlag, "s", "", "specify status")
 	f.Parse(args)
 	args = f.Args()
 
@@ -349,7 +351,14 @@ func ListCommand(args []string) error {
 	if err != nil {
 		return err
 	}
-
+	statuses, err := client.GetStatuses()
+	if err != nil {
+		return err
+	}
+	statusMap := make(map[string]int)
+	for _, status := range statuses {
+		statusMap[status.Name] = status.Id
+	}
 	projects, err := client.GetProjects(nil)
 	if err != nil {
 		return nil
@@ -362,6 +371,9 @@ func ListCommand(args []string) error {
 		query.Add("count", "100")
 		if isAssignedToMe {
 			query.Add("assigneeId[]", fmt.Sprintf("%v", myself.Id))
+		}
+		if statusID, ok := statusMap[statusFlag]; ok {
+			query.Add("statusId[]", fmt.Sprintf("%v", statusID))
 		}
 		query.Add("sort", "updated")
 		issues, err := client.GetIssues(query)
