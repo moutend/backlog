@@ -603,6 +603,7 @@ func GetCommentsCommand(args []string) error {
 	for _, comment := range comments {
 		if len(comment.ChangeLog) > 0 {
 			fmt.Println(comment.CreatedUser.Name, "が課題の内容を変更しました。")
+      fmt.Println(comment.Content)
 			for _, change := range comment.ChangeLog {
 				fmt.Println("  ", change.Field, change.OriginalValue, "->", change.NewValue)
 			}
