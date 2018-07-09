@@ -501,17 +501,19 @@ func GetPullRequestCommand(args []string) error {
 	}
 
 	var projectId string
+	var projectName string
 	var repositoryId string
 
 	for _, project := range projects {
-		projectId = fmt.Sprintf("%v", project.Id)
-		repos, err := client.GetRepositories(projectId, nil)
+		repos, err := client.GetRepositories(fmt.Sprint(project.Id), nil)
 		if err != nil {
 			return err
 		}
 		for _, repo := range repos {
 			if repo.Name == args[0] {
-				repositoryId = args[0]
+				projectId = fmt.Sprintf("%v", project.Id)
+				projectName = project.Name
+				repositoryId = fmt.Sprint(repo.Id)
 				break
 			}
 		}
@@ -530,7 +532,14 @@ func GetPullRequestCommand(args []string) error {
 
 	fmt.Println("---")
 	fmt.Println("summary:", pullRequest.Summary)
+	fmt.Println("project:", projectName)
+	fmt.Println("status:", pullRequest.Status.Name)
+	fmt.Println("number:", pullRequest.Number)
+	fmt.Println("branch:", pullRequest.Branch)
+	fmt.Println("base:", pullRequest.Base)
+	fmt.Println("issuekey:", pullRequest.Issue.IssueKey)
 	fmt.Println("assignee:", pullRequest.Assignee.Name)
+	fmt.Println("created:", pullRequest.CreateUser.Name)
 	fmt.Println("---")
 	fmt.Println(pullRequest.Description)
 
