@@ -2,6 +2,7 @@ package app
 
 import (
 	"backlog/internal/backlog"
+	"bytes"
 	"fmt"
 
 	"github.com/ericaro/frontmatter"
@@ -33,51 +34,56 @@ type Issue struct {
 }
 
 func (i *Issue) Marshal() ([]byte, error) {
-	f := IssueFrontMatter{}
+	buffer := &bytes.Buffer{}
+
+	fmt.Fprintln(buffer, "---")
 
 	if i.Project != nil {
-		f.Project = i.Project.ProjectKey
+		fmt.Fprintf(buffer, "project: %s\n", i.Project.ProjectKey)
 	}
 	if i.ParentIssue != nil {
-		f.Parent = i.ParentIssue.IssueKey
+		fmt.Fprintf(buffer, "parent: %s\n", i.ParentIssue.IssueKey)
 	}
 	if i.Issue == nil {
 		goto END_ISSUE
 	}
 
-	f.Summary = i.Issue.Summary
-	f.Content = i.Issue.Description
+	fmt.Fprintf(buffer, "summary: %q\n", i.Issue.Summary)
 
 	if i.Issue.IssueKey != "" {
-		f.Issue = i.Issue.IssueKey
+		fmt.Fprintf(buffer, "issue: %s\n", i.Issue.IssueKey)
 	}
 	if i.Issue.IssueType != nil {
-		f.Type = i.Issue.IssueType.Name
+		fmt.Fprintf(buffer, "type: %s\n", i.Issue.IssueType.Name)
 	}
 	if i.Issue.Priority != nil {
-		f.Priority = i.Issue.Priority.Name
+		fmt.Fprintf(buffer, "priority: %s\n", i.Issue.Priority.Name)
 	}
 	if i.Issue.Status != nil {
-		f.Status = i.Issue.Status.Name
+		fmt.Fprintf(buffer, "status: %s\n", i.Issue.Status.Name)
 	}
 	if i.Issue.EstimatedHours != nil {
-		f64 := float64(*i.Issue.EstimatedHours)
-		f.Estimated = &f64
+		fmt.Fprintf(buffer, "estimated: %v\n", *i.Issue.EstimatedHours)
 	}
 	if i.Issue.ActualHours != nil {
-		f64 := float64(*i.Issue.ActualHours)
-		f.Actual = &f64
+		fmt.Fprintf(buffer, "actual: %v\n", *i.Issue.ActualHours)
 	}
 	if i.Issue.StartDate != nil {
-		f.Start = i.Issue.StartDate.Time().Format("2006-01-02")
+		fmt.Fprintf(buffer, "start: %s\n", i.Issue.StartDate.Time().Format("2006-01-02"))
 	}
 	if i.Issue.DueDate != nil {
-		f.Due = i.Issue.DueDate.Time().Format("2006-01-02")
+		fmt.Fprintf(buffer, "due: %s\n", i.Issue.DueDate.Time().Format("2006-01-02"))
 	}
+	if i.Issue.IssueKey != "" {
+		fmt.Fprintf(buffer, "url: https://%s/view/%s\n", backlog.SpaceName(), i.Issue.IssueKey)
+	}
+
+	fmt.Fprintln(buffer, "---")
+	fmt.Fprint(buffer, i.Issue.Description)
 
 END_ISSUE:
 
-	return frontmatter.Marshal(f)
+	return buffer.Bytes(), nil
 }
 
 func (i *Issue) unmarshal(data []byte) error {

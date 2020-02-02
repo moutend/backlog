@@ -47,11 +47,23 @@ func TestIssueMarshal(t *testing.T) {
 	backlog.SetDebug(true)
 
 	i := &Issue{
+		Project: &types.Project{
+			ProjectKey: "LIFE",
+		},
 		Issue: &types.Issue{
+			IssueKey:       "LIFE-123",
 			Summary:        "Issue Summary",
 			Description:    "Issue description",
 			StartDate:      types.NewDate("2020-02-02"),
+			DueDate:        types.NewDate("2020-02-02"),
 			EstimatedHours: types.NewHours(1.5),
+			ActualHours:    types.NewHours(1.5),
+			Priority: &types.Priority{
+				Name: "High",
+			},
+			Status: &types.ProjectStatus{
+				Name: "Ongoing",
+			},
 		},
 	}
 
