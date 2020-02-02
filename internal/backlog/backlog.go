@@ -1,10 +1,6 @@
 package backlog
 
 import (
-	"log"
-	"net/http"
-	"os"
-
 	"github.com/moutend/go-backlog/pkg/client"
 )
 
@@ -30,17 +26,6 @@ func SpaceName() string {
 	return backlogSpaceName
 }
 
-func SetDebug(debug bool) {
-	if debug {
-		hc := &HTTPClient{
-			logger:     log.New(os.Stdout, "DEBUG: ", 0),
-			httpClient: &http.Client{},
-		}
-
-		backlogClient.SetHTTPClient(hc)
-	} else {
-		hc := &http.Client{}
-
-		backlogClient.SetHTTPClient(hc)
-	}
+func SetHTTPClient(hc client.HTTPClient) {
+	backlogClient.SetHTTPClient(hc)
 }
