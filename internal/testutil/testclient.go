@@ -9,14 +9,12 @@ import (
 )
 
 type TestClient struct {
-	data              []byte
-	enableHTTPRequest bool
+	data []byte
 }
 
-func NewTestClient(data []byte, enableHTTPRequest bool) *TestClient {
+func NewTestClient(data []byte) *TestClient {
 	return &TestClient{
-		data:              data,
-		enableHTTPRequest: enableHTTPRequest,
+		data: data,
 	}
 }
 
@@ -58,7 +56,7 @@ func (t *TestClient) doHTTPRequest(req *http.Request) (*http.Response, error) {
 }
 
 func (t *TestClient) Do(req *http.Request) (*http.Response, error) {
-	if t.enableHTTPRequest {
+	if EnableHTTPRequest {
 		return t.doHTTPRequest(req)
 	}
 
