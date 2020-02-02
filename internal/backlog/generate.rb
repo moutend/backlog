@@ -48,6 +48,6 @@ functions.each do |f|
 
   puts ""
   puts "func #{f[:name]}(#{f[:args]}) #{f[:ret]} {"
-  puts "  return bc.#{f[:name]}(#{params})"
+  puts "  return backlogClient.#{f[:name]}(#{params})"
   puts "}"
 end

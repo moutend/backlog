@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	bc               *client.Client
+	backlogClient    *client.Client
 	backlogSpaceName string
 )
 
@@ -21,7 +21,7 @@ func Setup(space, token string) error {
 	}
 
 	backlogSpaceName = space
-	bc = c
+	backlogClient = c
 
 	return nil
 }
@@ -37,10 +37,10 @@ func SetDebug(debug bool) {
 			httpClient: &http.Client{},
 		}
 
-		bc.SetHTTPClient(hc)
+		backlogClient.SetHTTPClient(hc)
 	} else {
 		hc := &http.Client{}
 
-		bc.SetHTTPClient(hc)
+		backlogClient.SetHTTPClient(hc)
 	}
 }
