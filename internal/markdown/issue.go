@@ -1,4 +1,4 @@
-package app
+package markdown
 
 import (
 	"backlog/internal/backlog"
@@ -102,8 +102,10 @@ func (i *Issue) unmarshal(data []byte) error {
 	i.Project = project
 
 	i.Issue = &types.Issue{}
+
 	i.Issue.Summary = fo.Summary
 	i.Issue.Description = fo.Content
+	i.Issue.ProjectId = &project.Id
 
 	if fo.Estimated != nil {
 		i.Issue.EstimatedHours = types.NewHours(*fo.Estimated)

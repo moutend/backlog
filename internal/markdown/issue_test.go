@@ -1,4 +1,4 @@
-package app
+package markdown
 
 import (
 	"backlog/internal/backlog"

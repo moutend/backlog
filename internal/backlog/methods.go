@@ -23,12 +23,12 @@ func GetPullRequestCommentsContext(ctx context.Context, projectKeyOrId, reposito
 	return backlogClient.GetPullRequestCommentsContext(ctx, projectKeyOrId, repositoryNameOrId, number, query)
 }
 
-func AddIssue(query url.Values) (*Issue, error) {
-	return backlogClient.AddIssue(query)
+func AddIssue(issue *Issue, notifiedUsers []*User) (*Issue, error) {
+	return backlogClient.AddIssue(issue, notifiedUsers)
 }
 
-func AddIssueContext(ctx context.Context, query url.Values) (*Issue, error) {
-	return backlogClient.AddIssueContext(ctx, query)
+func AddIssueContext(ctx context.Context, issue *Issue, notifiedUsers []*User) (*Issue, error) {
+	return backlogClient.AddIssueContext(ctx, issue, notifiedUsers)
 }
 
 func GetIssue(issueKeyOrId string) (*Issue, error) {
