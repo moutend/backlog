@@ -92,6 +92,9 @@ func (i *Issue) unmarshal(data []byte) error {
 	if err := frontmatter.Unmarshal(data, &fo); err != nil {
 		return err
 	}
+	if fo.Project == "" {
+		return fmt.Errorf("markdown: project is required")
+	}
 
 	project, err := backlog.GetProject(fo.Project)
 
@@ -105,6 +108,7 @@ func (i *Issue) unmarshal(data []byte) error {
 
 	i.Issue.Summary = fo.Summary
 	i.Issue.Description = fo.Content
+	i.Issue.IssueKey = fo.Issue
 	i.Issue.ProjectId = &project.Id
 
 	if fo.Estimated != nil {
@@ -127,6 +131,7 @@ func (i *Issue) unmarshal(data []byte) error {
 		}
 
 		i.ParentIssue = parent
+
 		i.Issue.ParentIssueId = &parent.Id
 	}
 

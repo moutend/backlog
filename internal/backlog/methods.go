@@ -39,12 +39,12 @@ func GetIssueContext(ctx context.Context, issueKeyOrId string) (*Issue, error) {
 	return backlogClient.GetIssueContext(ctx, issueKeyOrId)
 }
 
-func UpdateIssue(issueKeyOrId string, query url.Values) (*Issue, error) {
-	return backlogClient.UpdateIssue(issueKeyOrId, query)
+func UpdateIssue(issue *Issue, notifiedUsers []*User, comment string) (*Issue, error) {
+	return backlogClient.UpdateIssue(issue, notifiedUsers, comment)
 }
 
-func UpdateIssueContext(ctx context.Context, issueKeyOrId string, query url.Values) (*Issue, error) {
-	return backlogClient.UpdateIssueContext(ctx, issueKeyOrId, query)
+func UpdateIssueContext(ctx context.Context, issue *Issue, notifiedUsers []*User, comment string) (*Issue, error) {
+	return backlogClient.UpdateIssueContext(ctx, issue, notifiedUsers, comment)
 }
 
 func DeleteIssue(issueKeyOrId string) (*Issue, error) {
