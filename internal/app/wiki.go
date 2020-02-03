@@ -35,26 +35,36 @@ func wikiListCommandRunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	wikis := []*types.Wiki{}
-	projectIdToName := map[uint64]string{}
+	wikiMap := map[uint64][]*types.Wiki{}
 
 	for _, project := range projects {
-		ws, err := backlog.GetWikis(fmt.Sprint(project.Id), nil)
+		wikis, err := backlog.GetWikis(project.ProjectKey, nil)
 
 		if err != nil {
 			return err
 		}
 
-		wikis = append(wikis, ws...)
-		projectIdToName[project.Id] = project.Name
+		wikiMap[project.Id] = wikis
 	}
-	for _, wiki := range wikis {
-		cmd.Printf(
-			"- [%s] %s (id:%d)\n",
-			projectIdToName[wiki.ProjectId],
-			wiki.Name,
-			wiki.Id,
-		)
+	for i, project := range projects {
+		cmd.Printf("# [%s] %s\n\n", project.ProjectKey, project.Name)
+
+		wikis := wikiMap[project.Id]
+
+		if len(wikis) == 0 {
+			cmd.Println("No wikis.")
+
+			goto NEXT
+		}
+		for _, wiki := range wikis {
+			cmd.Printf("- %s (id:%d)\n", wiki.Name, wiki.Id)
+		}
+
+	NEXT:
+
+		if i < len(projects)-1 {
+			cmd.Println("")
+		}
 	}
 
 	return nil

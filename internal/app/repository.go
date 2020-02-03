@@ -43,7 +43,7 @@ func repositoryListCommandRunE(cmd *cobra.Command, args []string) error {
 		repoMap[project.Id] = repos
 	}
 	for i, project := range projects {
-		cmd.Printf("# %s\n\n", project.Name)
+		cmd.Printf("# [%s] %s\n\n", project.ProjectKey, project.Name)
 
 		repos := repoMap[project.Id]
 
