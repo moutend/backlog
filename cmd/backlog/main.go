@@ -1,17 +1,12 @@
 package main
 
 import (
-	"log"
-
 	"backlog/internal/app"
+	"os"
 )
-
-func init() {
-	log.SetFlags(0)
-}
 
 func main() {
 	if err := app.RootCommand.Execute(); err != nil {
-		log.Fatal(err)
+		os.Exit(-1)
 	}
 }

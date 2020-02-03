@@ -119,12 +119,12 @@ func GetProjectsContext(ctx context.Context, query url.Values) ([]*Project, erro
 	return backlogClient.GetProjectsContext(ctx, query)
 }
 
-func AddPullRequest(projectIdOrKey, repositoryIdOrKey string, query url.Values) (*PullRequest, error) {
-	return backlogClient.AddPullRequest(projectIdOrKey, repositoryIdOrKey, query)
+func AddPullRequest(pullRequest *PullRequest, notifiedUsers []*User) (*PullRequest, error) {
+	return backlogClient.AddPullRequest(pullRequest, notifiedUsers)
 }
 
-func AddPullRequestContext(ctx context.Context, projectIdOrKey, repositoryIdOrName string, query url.Values) (*PullRequest, error) {
-	return backlogClient.AddPullRequestContext(ctx, projectIdOrKey, repositoryIdOrName, query)
+func AddPullRequestContext(ctx context.Context, pullRequest *PullRequest, notifiedUsers []*User) (*PullRequest, error) {
+	return backlogClient.AddPullRequestContext(ctx, pullRequest, notifiedUsers)
 }
 
 func GetPullRequest(projectIdOrKey, repositoryIdOrName string, number int64) (*PullRequest, error) {
