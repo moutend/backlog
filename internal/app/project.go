@@ -13,7 +13,7 @@ var projectCommand = &cobra.Command{
 }
 
 func projectCommandRunE(cmd *cobra.Command, args []string) error {
-	return projectListCommandRunE(cmd, args)
+	return nil
 }
 
 var projectListCommand = &cobra.Command{
@@ -30,7 +30,7 @@ func projectListCommandRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, project := range projects {
-		cmd.Printf("- %s (id:%d)\n", project.Name, project.Id)
+		cmd.Printf("- [%s] %s (id:%d)\n", project.ProjectKey, project.Name, project.Id)
 	}
 
 	return nil
