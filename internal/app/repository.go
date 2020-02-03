@@ -53,7 +53,16 @@ func repositoryListCommandRunE(cmd *cobra.Command, args []string) error {
 			goto NEXT
 		}
 		for _, repo := range repos {
-			cmd.Printf("- %s\n", repo.Name)
+			cmd.Printf("- %s", repo.Name)
+
+			if yes, _ := cmd.Flags().GetBool("url"); yes {
+				cmd.Printf(" (%s)", repo.HTTPURL)
+			}
+			if yes, _ := cmd.Flags().GetBool("ssh"); yes {
+				cmd.Printf(" (%s)", repo.SSHURL)
+			}
+
+			cmd.Printf("\n")
 		}
 
 	NEXT:
@@ -68,6 +77,9 @@ func repositoryListCommandRunE(cmd *cobra.Command, args []string) error {
 
 func init() {
 	RootCommand.AddCommand(repositoryCommand)
+
+	repositoryListCommand.Flags().BoolP("url", "u", false, "Show repository URL (HTTP)")
+	repositoryListCommand.Flags().BoolP("ssh", "s", false, "Show repository URL (SSH)")
 
 	repositoryCommand.AddCommand(repositoryListCommand)
 }
