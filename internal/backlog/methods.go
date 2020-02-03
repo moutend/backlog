@@ -167,12 +167,12 @@ func GetRepositoriesContext(ctx context.Context, projectKeyOrId string, query ur
 	return backlogClient.GetRepositoriesContext(ctx, projectKeyOrId, query)
 }
 
-func GetRepository(projectKeyOrId, repositoryNameOrId string, query url.Values) (*Repository, error) {
-	return backlogClient.GetRepository(projectKeyOrId, repositoryNameOrId, query)
+func GetRepository(projectKeyOrId, repositoryNameOrId string) (*Repository, error) {
+	return backlogClient.GetRepository(projectKeyOrId, repositoryNameOrId)
 }
 
-func GetRepositoryContext(ctx context.Context, projectKeyOrId, repositoryNameOrId string, query url.Values) (*Repository, error) {
-	return backlogClient.GetRepositoryContext(ctx, projectKeyOrId, repositoryNameOrId, query)
+func GetRepositoryContext(ctx context.Context, projectKeyOrId, repositoryNameOrId string) (*Repository, error) {
+	return backlogClient.GetRepositoryContext(ctx, projectKeyOrId, repositoryNameOrId)
 }
 
 func GetSpace() (*Space, error) {

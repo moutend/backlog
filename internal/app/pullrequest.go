@@ -2,7 +2,7 @@ package app
 
 import (
 	"backlog/internal/markdown"
-	"fmt"
+	"io/ioutil"
 	"net/url"
 	"strconv"
 
@@ -69,34 +69,43 @@ var pullRequestReadCommand = &cobra.Command{
 }
 
 func pullRequestReadCommandRunE(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
+	if len(args) < 3 {
 		return nil
 	}
 
-	i, err := strconv.Atoi(args[0])
+	projectKey := args[0]
+	repositoryName := args[1]
+	number, err := strconv.Atoi(args[2])
 
 	if err != nil {
 		return err
 	}
 
-	wiki, err := backlog.GetWiki(uint64(i))
+	project, err := backlog.GetProject(projectKey)
 
 	if err != nil {
 		return err
 	}
 
-	project, err := backlog.GetProject(fmt.Sprint(wiki.ProjectId))
+	repository, err := backlog.GetRepository(project.ProjectKey, repositoryName)
 
 	if err != nil {
 		return err
 	}
 
-	mw := markdown.Wiki{
-		Wiki:    wiki,
-		Project: project,
+	pullRequest, err := backlog.GetPullRequest(projectKey, repositoryName, int64(number))
+
+	if err != nil {
+		return err
 	}
 
-	output, err := mw.Marshal()
+	mpr := markdown.PullRequest{
+		Project:     project,
+		Repository:  repository,
+		PullRequest: pullRequest,
+	}
+
+	output, err := mpr.Marshal()
 
 	if err != nil {
 		return err
@@ -107,6 +116,25 @@ func pullRequestReadCommandRunE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+var pullRequestCreateCommand = &cobra.Command{
+	Use:     "create",
+	Aliases: []string{"c"},
+	RunE:    pullRequestCreateCommandRunE,
+}
+
+func pullRequestCreateCommandRunE(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return nil
+	}
+
+	_, err := ioutil.ReadFile(args[0])
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 func init() {
 	RootCommand.AddCommand(pullRequestCommand)
 

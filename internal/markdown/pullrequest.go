@@ -20,8 +20,8 @@ type PullRequestFrontMatter struct {
 
 type PullRequest struct {
 	Project     *types.Project     `json:"project"`
-	Issue       *types.Issue       `json:"issue"`
 	PullRequest *types.PullRequest `json:"pullRequest"`
+	Repository  *types.Repository  `json:"repository"`
 }
 
 func (v *PullRequest) Marshal() ([]byte, error) {
@@ -32,20 +32,19 @@ func (v *PullRequest) Marshal() ([]byte, error) {
 	if v.Project != nil {
 		fmt.Fprintf(buffer, "project: %s\n", v.Project.ProjectKey)
 	}
-	if v.Issue != nil {
-		fmt.Fprintf(buffer, "issue: %s\n", v.Issue.IssueKey)
+	if v.Repository != nil {
+		fmt.Fprintf(buffer, "repository: %s\n", v.Repository.Name)
 	}
 	if v.PullRequest == nil {
 		return nil, fmt.Errorf("markdown: PullRequest.PullRequest is required")
 	}
 
 	fmt.Fprintf(buffer, "summary: %q\n", v.PullRequest.Summary)
+	fmt.Fprintf(buffer, "issue: %s\n", v.PullRequest.Issue.IssueKey)
 	fmt.Fprintf(buffer, "number: %d\n", v.PullRequest.Number)
 	fmt.Fprintf(buffer, "base: %s\n", v.PullRequest.Base)
 	fmt.Fprintf(buffer, "branch: %s\n", v.PullRequest.Branch)
 	fmt.Fprintf(buffer, "status: %s\n", v.PullRequest.Status.Name)
-	fmt.Fprintf(buffer, "basecommit: %s\n", v.PullRequest.BaseCommit)
-	fmt.Fprintf(buffer, "branchcommit: %s\n", v.PullRequest.BranchCommit)
 
 	if v.PullRequest.Assignee != nil {
 		fmt.Fprintf(buffer, "assignee: %s\n", v.PullRequest.Assignee.Name)
