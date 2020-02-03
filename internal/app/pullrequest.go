@@ -62,6 +62,38 @@ func pullRequestListCommandRunE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+var pullRequestCreateCommand = &cobra.Command{
+	Use:     "create",
+	Aliases: []string{"c"},
+	RunE:    pullRequestCreateCommandRunE,
+}
+
+func pullRequestCreateCommandRunE(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return nil
+	}
+
+	data, err := ioutil.ReadFile(args[0])
+
+	if err != nil {
+		return err
+	}
+
+	mpr := markdown.PullRequest{}
+
+	mpr.Unmarshal(data)
+
+	createdPullRequest, err := backlog.AddPullRequest(mpr.PullRequest, nil)
+
+	if err != nil {
+		return nil
+	}
+
+	cmd.Println("Created", createdPullRequest.Number)
+
+	return nil
+}
+
 var pullRequestReadCommand = &cobra.Command{
 	Use:     "read",
 	Aliases: []string{"r"},
@@ -116,25 +148,6 @@ func pullRequestReadCommandRunE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-var pullRequestCreateCommand = &cobra.Command{
-	Use:     "create",
-	Aliases: []string{"c"},
-	RunE:    pullRequestCreateCommandRunE,
-}
-
-func pullRequestCreateCommandRunE(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return nil
-	}
-
-	_, err := ioutil.ReadFile(args[0])
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
 func init() {
 	RootCommand.AddCommand(pullRequestCommand)
 
