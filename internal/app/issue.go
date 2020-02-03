@@ -38,8 +38,8 @@ func issueListCommandRunE(cmd *cobra.Command, args []string) error {
 	createdOrUpdatedDate := ""
 
 	for _, issue := range issues {
-		fmt.Printf(
-			"  - [%s] (%s) %s (updated at %s by %s)\n",
+		cmd.Printf(
+			"- [%s] (%s) %s (updated at %s by %s)\n",
 			issue.IssueKey,
 			issue.Status.Name,
 			issue.Summary,
@@ -134,7 +134,7 @@ func issueReadCommandRunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fmt.Printf("%s", output)
+	cmd.Printf("%s", output)
 
 	return nil
 }
