@@ -148,9 +148,46 @@ func pullRequestReadCommandRunE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+var pullRequestUpdateCommand = &cobra.Command{
+	Use:     "update",
+	Aliases: []string{"u"},
+	RunE:    pullRequestUpdateCommandRunE,
+}
+
+func pullRequestUpdateCommandRunE(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return nil
+	}
+
+	data, err := ioutil.ReadFile(args[0])
+
+	if err != nil {
+		return err
+	}
+
+	mpr := markdown.PullRequest{}
+
+	mpr.Unmarshal(data)
+
+	comment, _ := cmd.Flags().GetString("comment")
+
+	updatedPullRequest, err := backlog.UpdatePullRequest(mpr.PullRequest, nil, comment)
+
+	if err != nil {
+		return err
+	}
+
+	cmd.Println("Updated", updatedPullRequest.Number)
+
+	return nil
+}
+
 func init() {
 	RootCommand.AddCommand(pullRequestCommand)
 
+	pullRequestUpdateCommand.Flags().StringP("comment", "c", "", "Set comment")
+
 	pullRequestCommand.AddCommand(pullRequestListCommand)
 	pullRequestCommand.AddCommand(pullRequestReadCommand)
+	pullRequestCommand.AddCommand(pullRequestUpdateCommand)
 }

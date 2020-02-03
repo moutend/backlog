@@ -103,10 +103,12 @@ func (v *PullRequest) Unmarshal(data []byte) error {
 	v.Repository = repository
 
 	v.PullRequest = &types.PullRequest{
-		Summary:     prfm.Summary,
-		Description: prfm.Content,
-		Base:        prfm.Base,
-		Branch:      prfm.Branch,
+		Summary:      prfm.Summary,
+		Description:  prfm.Content,
+		Base:         prfm.Base,
+		Branch:       prfm.Branch,
+		ProjectId:    project.Id,
+		RepositoryId: repository.Id,
 	}
 
 	if prfm.Issue != "" {

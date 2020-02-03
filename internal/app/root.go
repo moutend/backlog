@@ -20,8 +20,7 @@ func rootPersistentPreRunE(cmd *cobra.Command, args []string) error {
 	if err := backlog.Setup(space, token); err != nil {
 		return err
 	}
-
-	if debug, _ := cmd.Flags().GetBool("debug"); debug {
+	if yes, _ := cmd.Flags().GetBool("debug"); yes {
 		backlog.SetHTTPClient(backlog.NewDebugClient())
 	}
 
@@ -29,5 +28,5 @@ func rootPersistentPreRunE(cmd *cobra.Command, args []string) error {
 }
 
 func init() {
-	RootCommand.Flags().BoolP("debug", "d", false, "Enable debug output")
+	RootCommand.PersistentFlags().BoolP("debug", "d", false, "Enable debug output")
 }

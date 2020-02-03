@@ -62,9 +62,7 @@ func issueCreateCommandRunE(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	filePath := args[0]
-
-	data, err := ioutil.ReadFile(filePath)
+	data, err := ioutil.ReadFile(args[0])
 
 	if err != nil {
 		return err
@@ -208,6 +206,9 @@ func init() {
 	RootCommand.AddCommand(issueCommand)
 
 	issueUpdateCommand.Flags().StringP("comment", "c", "", "Set comment")
+
+	issueListCommand.Flags().BoolP("all", "a", false, "Fetch all issues")
+	issueListCommand.Flags().BoolP("me", "m", false, "Select issues which assigned to me")
 
 	issueCommand.AddCommand(issueListCommand)
 	issueCommand.AddCommand(issueCreateCommand)
