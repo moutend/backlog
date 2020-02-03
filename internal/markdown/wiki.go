@@ -17,7 +17,7 @@ type WikiFrontMatter struct {
 
 type Wiki struct {
 	Project *types.Project `json:"project"`
-	Wiki    *types.Wiki    `json:"issue"`
+	Wiki    *types.Wiki    `json:"wiki"`
 }
 
 func (i *Wiki) Marshal() ([]byte, error) {
