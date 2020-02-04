@@ -90,7 +90,6 @@ PRINT_ISSUES:
 	sort.Slice(issues, func(i, j int) bool {
 		return issues[i].Created.Time().After(issues[j].Created.Time())
 	})
-
 	selectAssignedMe, err := cmd.Flags().GetBool("me")
 	projectKey, _ := cmd.Flags().GetString("project")
 
@@ -98,8 +97,13 @@ PRINT_ISSUES:
 		if projectKey != "" && !strings.HasPrefix(issue.IssueKey, projectKey) {
 			continue
 		}
-		if selectAssignedMe && issue.Assignee.Id != myself.Id {
-			continue
+		if selectAssignedMe {
+			if issue.Assignee == nil {
+				continue
+			}
+			if issue.Assignee.Id != myself.Id {
+				continue
+			}
 		}
 
 		cmd.Printf(

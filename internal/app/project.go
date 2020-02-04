@@ -2,7 +2,9 @@ package app
 
 import (
 	"backlog/internal/backlog"
+	"backlog/internal/cache"
 
+	"github.com/moutend/go-backlog/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -23,14 +25,29 @@ var projectListCommand = &cobra.Command{
 }
 
 func projectListCommandRunE(cmd *cobra.Command, args []string) error {
-	projects, err := backlog.GetProjects(nil)
+	var (
+		projects []*types.Project
+		err      error
+	)
+
+	projects, err = backlog.GetProjects(nil)
+
+	if err != nil {
+		goto PRINT_PROJECTS
+	}
+	if err := cache.Save(projects); err != nil {
+		return err
+	}
+
+PRINT_PROJECTS:
+
+	projects, err = cache.LoadProjects()
 
 	if err != nil {
 		return err
 	}
-
 	for _, project := range projects {
-		cmd.Printf("- [%s] %s (id:%d)\n", project.ProjectKey, project.Name, project.Id)
+		cmd.Printf("- [%s] %s\n", project.ProjectKey, project.Name)
 	}
 
 	return nil
