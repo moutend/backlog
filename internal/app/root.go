@@ -2,6 +2,7 @@ package app
 
 import (
 	"os"
+	"time"
 
 	"backlog/internal/backlog"
 	"backlog/internal/cache"
@@ -33,4 +34,5 @@ func rootPersistentPreRunE(cmd *cobra.Command, args []string) error {
 
 func init() {
 	RootCommand.PersistentFlags().BoolP("debug", "d", false, "Enable debug output")
+	RootCommand.PersistentFlags().DurationP("timeout", "t", time.Minute, "Set timeout value (default=60s)")
 }

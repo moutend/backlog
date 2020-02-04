@@ -32,19 +32,19 @@ var pullRequestListCommand = &cobra.Command{
 }
 
 func pullRequestListCommandRunE(cmd *cobra.Command, args []string) error {
-	if len(args) < 2 {
-		return nil
-	}
-
-	projectKey := args[0]
-	repositoryName := args[1]
-
 	var (
 		project      *types.Project
 		pullRequests []*types.PullRequest
 		ctx          context.Context
 		err          error
 	)
+
+	if len(args) < 2 {
+		return nil
+	}
+
+	projectKey := args[0]
+	repositoryName := args[1]
 
 	timeout, _ := cmd.Flags().GetDuration("timeout")
 

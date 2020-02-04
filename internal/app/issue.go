@@ -41,15 +41,6 @@ func issueListCommandRunE(cmd *cobra.Command, args []string) error {
 		err    error
 	)
 
-	myself, err = backlog.GetMyself()
-
-	if err != nil {
-		// warn
-	}
-	if err := cache.SaveMyself(myself); err != nil {
-		return err
-	}
-
 	timeout, _ := cmd.Flags().GetDuration("timeout")
 
 	if timeout == 0 {
@@ -60,6 +51,15 @@ func issueListCommandRunE(cmd *cobra.Command, args []string) error {
 	}
 
 	ctx, _ = context.WithTimeout(context.Background(), timeout)
+
+	myself, err = backlog.GetMyself()
+
+	if err != nil {
+		// warn
+	}
+	if err := cache.SaveMyself(myself); err != nil {
+		return err
+	}
 
 	issues, err = backlog.GetAllIssuesContext(ctx)
 
@@ -303,7 +303,6 @@ func init() {
 
 	issueUpdateCommand.Flags().StringP("comment", "c", "", "Set comment")
 
-	issueListCommand.Flags().DurationP("timeout", "t", time.Minute, "Set timeout value (default=60s)")
 	issueListCommand.Flags().BoolP("all", "a", false, "Fetch all issues (default=false)")
 	issueListCommand.Flags().BoolP("me", "m", false, "Select issues which assigned to me (default=false)")
 	issueListCommand.Flags().StringP("project", "p", "", "Specify issue's project")
