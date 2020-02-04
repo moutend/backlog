@@ -1,9 +1,12 @@
 package app
 
 import (
+	"backlog/internal/cache"
 	"backlog/internal/markdown"
 	"fmt"
 	"io/ioutil"
+
+	"github.com/moutend/go-backlog/pkg/types"
 
 	"backlog/internal/backlog"
 
@@ -96,34 +99,68 @@ func issueReadCommandRunE(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	mi := &markdown.Issue{}
+	var (
+		project     *types.Project
+		issue       *types.Issue
+		parentIssue *types.Issue
+		err         error
+	)
 
-	issue, err := backlog.GetIssue(args[0])
+	issue, err = backlog.GetIssue(args[0])
+
+	if err != nil {
+		goto PRINT_ISSUE
+	}
+	if err := cache.Save(issue); err != nil {
+		return err
+	}
+
+	project, err = backlog.GetProject(fmt.Sprint(*issue.ProjectId))
+
+	if err != nil {
+		goto PRINT_ISSUE
+	}
+	if err := cache.Save(project); err != nil {
+		return err
+	}
+	if issue.ParentIssueId == nil {
+		goto PRINT_ISSUE
+	}
+
+	parentIssue, err = backlog.GetIssue(fmt.Sprint(*issue.ParentIssueId))
+
+	if err != nil {
+		goto PRINT_ISSUE
+	}
+	if err := cache.Save(parentIssue); err != nil {
+		return err
+	}
+
+PRINT_ISSUE:
+
+	issue, err = cache.LoadIssue(args[0])
 
 	if err != nil {
 		return err
 	}
-	if issue.ProjectId == nil {
-		return fmt.Errorf("issue is broken")
-	}
 
-	project, err := backlog.GetProject(fmt.Sprint(*issue.ProjectId))
+	project, err = cache.LoadProject(fmt.Sprint(*issue.ProjectId))
 
 	if err != nil {
 		return err
 	}
-
-	mi.Issue = issue
-	mi.Project = project
-
 	if issue.ParentIssueId != nil {
-		parent, err := backlog.GetIssue(fmt.Sprint(issue.ParentIssueId))
+		parentIssue, err = cache.LoadIssue(fmt.Sprint(*issue.ParentIssueId))
 
 		if err != nil {
 			return err
 		}
+	}
 
-		mi.ParentIssue = parent
+	mi := &markdown.Issue{
+		Project:     project,
+		Issue:       issue,
+		ParentIssue: parentIssue,
 	}
 
 	output, err := mi.Marshal()

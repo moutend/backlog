@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"backlog/internal/backlog"
+	"backlog/internal/cache"
 
 	"github.com/spf13/cobra"
 )
@@ -18,6 +19,9 @@ func rootPersistentPreRunE(cmd *cobra.Command, args []string) error {
 	token := os.Getenv("BACKLOG_TOKEN")
 
 	if err := backlog.Setup(space, token); err != nil {
+		return err
+	}
+	if err := cache.Setup(space); err != nil {
 		return err
 	}
 	if yes, _ := cmd.Flags().GetBool("debug"); yes {
