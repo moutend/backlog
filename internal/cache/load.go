@@ -28,6 +28,45 @@ func LoadMyself() (*types.User, error) {
 	return myself, nil
 }
 
+func LoadPullRequests(projectKey, repositoryName string) ([]*types.PullRequest, error) {
+	if projectKey == "" {
+		return nil, fmt.Errorf("cache: projectKey is required")
+	}
+	if repositoryName == "" {
+		return nil, fmt.Errorf("cache: repositoryName is required")
+	}
+
+	pullRequests := []*types.PullRequest{}
+	basePath := filepath.Join(cachePullRequestPath, projectKey, repositoryName)
+
+	err := filepath.Walk(basePath, func(path string, info os.FileInfo, err error) error {
+		if !strings.HasSuffix(path, ".json") {
+			return nil
+		}
+
+		data, err := ioutil.ReadFile(path)
+
+		if err != nil {
+			return err
+		}
+
+		var pullRequest *types.PullRequest
+
+		if err := json.Unmarshal(data, &pullRequest); err != nil {
+			return err
+		}
+
+		pullRequests = append(pullRequests, pullRequest)
+
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("cache: %w", err)
+	}
+
+	return pullRequests, nil
+}
+
 func LoadIssues() ([]*types.Issue, error) {
 	issues := []*types.Issue{}
 

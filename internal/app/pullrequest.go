@@ -1,13 +1,17 @@
 package app
 
 import (
+	"backlog/internal/cache"
 	"backlog/internal/markdown"
+	"context"
 	"io/ioutil"
-	"net/url"
+	"sort"
 	"strconv"
+	"time"
 
 	"backlog/internal/backlog"
 
+	"github.com/moutend/go-backlog/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -35,25 +39,57 @@ func pullRequestListCommandRunE(cmd *cobra.Command, args []string) error {
 	projectKey := args[0]
 	repositoryName := args[1]
 
-	_, err := backlog.GetProject(projectKey)
+	var (
+		project      *types.Project
+		pullRequests []*types.PullRequest
+		ctx          context.Context
+		err          error
+	)
+
+	timeout, _ := cmd.Flags().GetDuration("timeout")
+
+	if timeout == 0 {
+		goto PRINT_PULLREQUESTS
+	}
+	if timeout > 15*time.Minute {
+		timeout = 15 * time.Minute
+	}
+
+	ctx, _ = context.WithTimeout(context.Background(), timeout)
+
+	project, err = backlog.GetProject(projectKey)
+
+	if err != nil {
+		goto PRINT_PULLREQUESTS
+	}
+	if err := cache.Save(project); err != nil {
+		return err
+	}
+
+	pullRequests, err = backlog.GetAllPullRequestsContext(ctx, projectKey, repositoryName)
+
+	if err != nil {
+		goto PRINT_PULLREQUESTS
+	}
+	if err := cache.SavePullRequests(projectKey, repositoryName, pullRequests); err != nil {
+		return err
+	}
+
+PRINT_PULLREQUESTS:
+
+	pullRequests, err = cache.LoadPullRequests(projectKey, repositoryName)
 
 	if err != nil {
 		return err
 	}
 
-	query := url.Values{}
-
-	query.Add("count", "100")
-
-	pullRequests, err := backlog.GetPullRequests(projectKey, repositoryName, query)
-
-	if err != nil {
-		return err
-	}
+	sort.Slice(pullRequests, func(i, j int) bool {
+		return pullRequests[i].Created.Time().After(pullRequests[j].Created.Time())
+	})
 
 	for _, pullRequest := range pullRequests {
 		cmd.Printf(
-			"- %d [%s] %s\n",
+			"%d. [%s] %s\n",
 			pullRequest.Number,
 			pullRequest.Status.Name,
 			pullRequest.Summary)
@@ -184,6 +220,8 @@ func pullRequestUpdateCommandRunE(cmd *cobra.Command, args []string) error {
 
 func init() {
 	RootCommand.AddCommand(pullRequestCommand)
+
+	pullRequestListCommand.Flags().DurationP("timeout", "t", time.Minute, "Set timeout value (default=60s)")
 
 	pullRequestUpdateCommand.Flags().StringP("comment", "c", "", "Set comment")
 

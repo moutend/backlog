@@ -53,6 +53,39 @@ func SaveMyself(user *types.User) error {
 	return nil
 }
 
+func SavePullRequests(projectKey, repositoryName string, pullRequests []*types.PullRequest) error {
+	if projectKey == "" {
+		return fmt.Errorf("cache: projectKey is required")
+	}
+	if repositoryName == "" {
+		return fmt.Errorf("cache: repositoryName is required")
+	}
+	if pullRequests == nil {
+		return fmt.Errorf("cache: can't save nil pull requests")
+	}
+
+	basePath := filepath.Join(cachePullRequestPath, projectKey, repositoryName)
+
+	// Ensure the output directory exists.
+	os.MkdirAll(basePath, 0755)
+
+	for _, pullRequest := range pullRequests {
+		data, err := json.Marshal(pullRequest)
+
+		if err != nil {
+			return fmt.Errorf("cache: %w", err)
+		}
+
+		outputPath := filepath.Join(basePath, fmt.Sprintf("%d.json", pullRequest.Number))
+
+		if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
+			return fmt.Errorf("cache: %w", err)
+		}
+	}
+
+	return nil
+}
+
 func saveUser(user *types.User) error {
 	if user == nil {
 		return fmt.Errorf("cache: can't save nil user")

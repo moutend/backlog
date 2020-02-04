@@ -152,6 +152,14 @@ func UpdatePullRequestContext(ctx context.Context, pullRequest *PullRequest, not
 	return backlogClient.UpdatePullRequestContext(ctx, pullRequest, notifiedUsers, comment)
 }
 
+func GetPullRequestsCount(projectIdOrKey, repositoryIdOrName string, query url.Values) (int64, error) {
+	return backlogClient.GetPullRequestsCount(projectIdOrKey, repositoryIdOrName, query)
+}
+
+func GetPullRequestsCountContext(ctx context.Context, projectIdOrKey, repositoryIdOrName string, query url.Values) (int64, error) {
+	return backlogClient.GetPullRequestsCountContext(ctx, projectIdOrKey, repositoryIdOrName, query)
+}
+
 func GetPullRequests(projectIdOrKey, repositoryIdOrName string, query url.Values) ([]*PullRequest, error) {
 	return backlogClient.GetPullRequests(projectIdOrKey, repositoryIdOrName, query)
 }
@@ -160,12 +168,12 @@ func GetPullRequestsContext(ctx context.Context, projectIdOrKey, repositoryIdOrN
 	return backlogClient.GetPullRequestsContext(ctx, projectIdOrKey, repositoryIdOrName, query)
 }
 
-func GetPullRequestsCount(projectIdOrKey, repositoryIdOrName string, query url.Values) (int64, error) {
-	return backlogClient.GetPullRequestsCount(projectIdOrKey, repositoryIdOrName, query)
+func GetAllPullRequests(projectIdOrKey, repositoryIdOrName string) ([]*PullRequest, error) {
+	return backlogClient.GetAllPullRequests(projectIdOrKey, repositoryIdOrName)
 }
 
-func GetPullRequestsCountContext(ctx context.Context, projectIdOrKey, repositoryIdOrName string, query url.Values) (int64, error) {
-	return backlogClient.GetPullRequestsCountContext(ctx, projectIdOrKey, repositoryIdOrName, query)
+func GetAllPullRequestsContext(ctx context.Context, projectIdOrKey, repositoryIdOrName string) ([]*PullRequest, error) {
+	return backlogClient.GetAllPullRequestsContext(ctx, projectIdOrKey, repositoryIdOrName)
 }
 
 func GetRepositories(projectKeyOrId string, query url.Values) ([]*Repository, error) {
