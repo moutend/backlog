@@ -14,6 +14,7 @@ var (
 	cacheIssuePath       string
 	cacheProjectPath     string
 	cachePullRequestPath string
+	cacheRepositoryPath  string
 	cacheUserPath        string
 	cacheWikiPath        string
 )
@@ -27,6 +28,7 @@ func Setup(space string) error {
 	cacheIssuePath = filepath.Join(cacheBaseDir, space, "issue")
 	cacheProjectPath = filepath.Join(cacheBaseDir, space, "project")
 	cachePullRequestPath = filepath.Join(cacheBaseDir, space, "pullrequest")
+	cacheRepositoryPath = filepath.Join(cacheBaseDir, space, "repository")
 	cacheUserPath = filepath.Join(cacheBaseDir, space, "user")
 	cacheWikiPath = filepath.Join(cacheBaseDir, space, "wiki")
 

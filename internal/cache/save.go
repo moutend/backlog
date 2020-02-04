@@ -15,6 +15,8 @@ func Save(v interface{}) error {
 		return fmt.Errorf("cache: can't save cache (probably Setup is not called)")
 	}
 	switch v.(type) {
+	case *types.Repository:
+		return saveRepository(v.(*types.Repository))
 	case *types.User:
 		return saveUser(v.(*types.User))
 	case []*types.Issue:
@@ -81,6 +83,60 @@ func SavePullRequests(projectKey, repositoryName string, pullRequests []*types.P
 		if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
 			return fmt.Errorf("cache: %w", err)
 		}
+	}
+
+	return nil
+}
+
+func SavePullRequest(projectKey, repositoryName string, pullRequest *types.PullRequest) error {
+	if projectKey == "" {
+		return fmt.Errorf("cache: projectKey is required")
+	}
+	if repositoryName == "" {
+		return fmt.Errorf("cache: repositoryName is required")
+	}
+	if pullRequest == nil {
+		return fmt.Errorf("cache: can't save nil pull request")
+	}
+
+	basePath := filepath.Join(cachePullRequestPath, projectKey, repositoryName)
+
+	// Ensure the output directory exists.
+	os.MkdirAll(basePath, 0755)
+
+	data, err := json.Marshal(pullRequest)
+
+	if err != nil {
+		return fmt.Errorf("cache: %w", err)
+	}
+
+	outputPath := filepath.Join(basePath, fmt.Sprintf("%d.json", pullRequest.Number))
+
+	if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
+		return fmt.Errorf("cache: %w", err)
+	}
+
+	return nil
+}
+
+func saveRepository(repository *types.Repository) error {
+	if repository == nil {
+		return fmt.Errorf("cache: can't save nil repository")
+	}
+
+	// Ensure the output directory exists.
+	os.MkdirAll(cacheRepositoryPath, 0755)
+
+	data, err := json.Marshal(repository)
+
+	if err != nil {
+		return fmt.Errorf("cache: %w", err)
+	}
+
+	outputPath := filepath.Join(cacheRepositoryPath, repository.Name)
+
+	if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
+		return fmt.Errorf("cache: %w", err)
 	}
 
 	return nil

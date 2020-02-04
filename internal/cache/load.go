@@ -67,6 +67,31 @@ func LoadPullRequests(projectKey, repositoryName string) ([]*types.PullRequest, 
 	return pullRequests, nil
 }
 
+func LoadPullRequest(projectKey, repositoryName string, number int) (*types.PullRequest, error) {
+	if projectKey == "" {
+		return nil, fmt.Errorf("cache: projectKey is required")
+	}
+	if repositoryName == "" {
+		return nil, fmt.Errorf("cache: repositoryName is required")
+	}
+
+	filePath := filepath.Join(cachePullRequestPath, projectKey, repositoryName, fmt.Sprintf("%d.json"))
+
+	data, err := ioutil.ReadFile(filePath)
+
+	if err != nil {
+		return nil, fmt.Errorf("cache: %w", err)
+	}
+
+	var pullRequest *types.PullRequest
+
+	if err := json.Unmarshal(data, &pullRequest); err != nil {
+		return nil, fmt.Errorf("cache: %w", err)
+	}
+
+	return pullRequest, nil
+}
+
 func LoadIssues() ([]*types.Issue, error) {
 	issues := []*types.Issue{}
 
@@ -243,4 +268,20 @@ func LoadProject(projectIdOrKey string) (*types.Project, error) {
 	}
 
 	return nil, fmt.Errorf("cache: project not found")
+}
+
+func LoadRepository(repositoryName string) (*types.Repository, error) {
+	data, err := ioutil.ReadFile(filepath.Join(cacheRepositoryPath, repositoryName+".json"))
+
+	if err != nil {
+		return nil, fmt.Errorf("cache: %w", err)
+	}
+
+	var repository *types.Repository
+
+	if err := json.Unmarshal(data, &repository); err != nil {
+		return nil, fmt.Errorf("cache: %w", err)
+	}
+
+	return repository, nil
 }

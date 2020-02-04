@@ -137,31 +137,68 @@ var pullRequestReadCommand = &cobra.Command{
 }
 
 func pullRequestReadCommandRunE(cmd *cobra.Command, args []string) error {
+	var (
+		project     *types.Project
+		repository  *types.Repository
+		pullRequest *types.PullRequest
+		number      int
+		err         error
+	)
+
 	if len(args) < 3 {
 		return nil
 	}
 
 	projectKey := args[0]
 	repositoryName := args[1]
-	number, err := strconv.Atoi(args[2])
+	number, err = strconv.Atoi(args[2])
 
 	if err != nil {
 		return err
 	}
 
-	project, err := backlog.GetProject(projectKey)
+	project, err = backlog.GetProject(projectKey)
+
+	if err != nil {
+		goto PRINT_PULLREQUEST
+	}
+	if err := cache.SavePullRequest(projectKey, repositoryName, pullRequest); err != nil {
+		return err
+	}
+
+	repository, err = backlog.GetRepository(project.ProjectKey, repositoryName)
+
+	if err != nil {
+		goto PRINT_PULLREQUEST
+	}
+	if err := cache.Save(repository); err != nil {
+		return err
+	}
+
+	pullRequest, err = backlog.GetPullRequest(projectKey, repositoryName, int64(number))
+
+	if err != nil {
+		goto PRINT_PULLREQUEST
+	}
+	if err := cache.SavePullRequest(projectKey, repositoryName, pullRequest); err != nil {
+		return err
+	}
+
+PRINT_PULLREQUEST:
+
+	project, err = cache.LoadProject(projectKey)
 
 	if err != nil {
 		return err
 	}
 
-	repository, err := backlog.GetRepository(project.ProjectKey, repositoryName)
+	repository, err = cache.LoadRepository(repositoryName)
 
 	if err != nil {
 		return err
 	}
 
-	pullRequest, err := backlog.GetPullRequest(projectKey, repositoryName, int64(number))
+	pullRequest, err = cache.LoadPullRequest(projectKey, repositoryName, number)
 
 	if err != nil {
 		return err
