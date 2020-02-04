@@ -3,8 +3,12 @@ package app
 import (
 	"backlog/internal/cache"
 	"backlog/internal/markdown"
+	"context"
 	"fmt"
 	"io/ioutil"
+	"sort"
+	"strings"
+	"time"
 
 	"github.com/moutend/go-backlog/pkg/types"
 
@@ -30,24 +34,79 @@ var issueListCommand = &cobra.Command{
 }
 
 func issueListCommandRunE(cmd *cobra.Command, args []string) error {
-	issues, err := backlog.GetIssues(nil)
+	var (
+		myself *types.User
+		issues []*types.Issue
+		ctx    context.Context
+		err    error
+	)
+
+	myself, err = backlog.GetMyself()
+
+	if err != nil {
+		// warn
+	}
+	if err := cache.SaveMyself(myself); err != nil {
+		return err
+	}
+
+	timeout, _ := cmd.Flags().GetDuration("timeout")
+
+	if timeout == 0 {
+		goto PRINT_ISSUES
+	}
+	if timeout > 15*time.Minute {
+		timeout = 15 * time.Minute
+	}
+
+	ctx, _ = context.WithTimeout(context.Background(), timeout)
+
+	issues, err = backlog.GetAllIssuesContext(ctx)
+
+	if err != nil {
+		// warn
+	}
+	if len(issues) == 0 {
+		goto PRINT_ISSUES
+	}
+	if err := cache.Save(issues); err != nil {
+		return err
+	}
+
+PRINT_ISSUES:
+
+	myself, err = cache.LoadMyself()
 
 	if err != nil {
 		return err
-		// warn.Printf("Failed to get issues")
 	}
 
-	createdOrUpdatedUser := ""
-	createdOrUpdatedDate := ""
+	issues, err = cache.LoadIssues()
+
+	if err != nil {
+		return err
+	}
+
+	sort.Slice(issues, func(i, j int) bool {
+		return issues[i].Created.Time().After(issues[j].Created.Time())
+	})
+
+	selectAssignedMe, err := cmd.Flags().GetBool("me")
+	projectKey, _ := cmd.Flags().GetString("project")
 
 	for _, issue := range issues {
+		if projectKey != "" && !strings.HasPrefix(issue.IssueKey, projectKey) {
+			continue
+		}
+		if selectAssignedMe && issue.Assignee.Id != myself.Id {
+			continue
+		}
+
 		cmd.Printf(
-			"- [%s] (%s) %s (updated at %s by %s)\n",
+			"- [%s] (%s) %s\n",
 			issue.IssueKey,
 			issue.Status.Name,
 			issue.Summary,
-			createdOrUpdatedDate,
-			createdOrUpdatedUser,
 		)
 	}
 
@@ -244,8 +303,10 @@ func init() {
 
 	issueUpdateCommand.Flags().StringP("comment", "c", "", "Set comment")
 
-	issueListCommand.Flags().BoolP("all", "a", false, "Fetch all issues")
-	issueListCommand.Flags().BoolP("me", "m", false, "Select issues which assigned to me")
+	issueListCommand.Flags().DurationP("timeout", "t", time.Minute, "Set timeout value (default=60s)")
+	issueListCommand.Flags().BoolP("all", "a", false, "Fetch all issues (default=false)")
+	issueListCommand.Flags().BoolP("me", "m", false, "Select issues which assigned to me (default=false)")
+	issueListCommand.Flags().StringP("project", "p", "", "Specify issue's project")
 
 	issueCommand.AddCommand(issueListCommand)
 	issueCommand.AddCommand(issueCreateCommand)
