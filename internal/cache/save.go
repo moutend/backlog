@@ -15,6 +15,8 @@ func Save(v interface{}) error {
 		return fmt.Errorf("cache: can't save cache (probably Setup is not called)")
 	}
 	switch v.(type) {
+	case *types.User:
+		return saveUser(v.(*types.User))
 	case []*types.Issue:
 		return saveIssues(v.([]*types.Issue))
 	case *types.Issue:
@@ -25,7 +27,53 @@ func Save(v interface{}) error {
 		return saveProject(v.(*types.Project))
 	}
 
-	return fmt.Errorf("cache: type %t is not supported", v)
+	return fmt.Errorf("cache: type %T is not supported", v)
+}
+
+func SaveMyself(user *types.User) error {
+	if user == nil {
+		return fmt.Errorf("cache: can't save nil user")
+	}
+
+	// Ensure the output directory exists.
+	os.MkdirAll(cacheUserPath, 0755)
+
+	data, err := json.Marshal(user)
+
+	if err != nil {
+		return fmt.Errorf("cache: %w", err)
+	}
+
+	outputPath := filepath.Join(cacheUserPath, "myself.json")
+
+	if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
+		return fmt.Errorf("cache: %w", err)
+	}
+
+	return nil
+}
+
+func saveUser(user *types.User) error {
+	if user == nil {
+		return fmt.Errorf("cache: can't save nil user")
+	}
+
+	// Ensure the output directory exists.
+	os.MkdirAll(cacheUserPath, 0755)
+
+	data, err := json.Marshal(user)
+
+	if err != nil {
+		return fmt.Errorf("cache: %w", err)
+	}
+
+	outputPath := filepath.Join(cacheUserPath, fmt.Sprintf("%s.json", user.Id))
+
+	if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
+		return fmt.Errorf("cache: %w", err)
+	}
+
+	return nil
 }
 
 func saveIssues(issues []*types.Issue) error {
@@ -62,7 +110,6 @@ func saveIssues(issues []*types.Issue) error {
 
 func saveIssue(issue *types.Issue) error {
 	if issue == nil {
-		return fmt.Errorf("cache: issue is empty")
 		return fmt.Errorf("cache: can't save nil issue")
 	}
 	if issue.IssueKey == "" {
@@ -121,7 +168,6 @@ func saveProjects(projects []*types.Project) error {
 
 func saveProject(project *types.Project) error {
 	if project == nil {
-		return fmt.Errorf("cache: project is empty")
 		return fmt.Errorf("cache: can't save nil project")
 	}
 	if project.ProjectKey == "" {

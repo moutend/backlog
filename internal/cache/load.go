@@ -12,6 +12,22 @@ import (
 	"github.com/moutend/go-backlog/pkg/types"
 )
 
+func LoadMyself() (*types.User, error) {
+	data, err := ioutil.ReadFile(filepath.Join(cacheUserPath, "myself.json"))
+
+	if err != nil {
+		return nil, fmt.Errorf("cache: %w", err)
+	}
+
+	var myself *types.User
+
+	if err := json.Unmarshal(data, &myself); err != nil {
+		return nil, fmt.Errorf("cache: %w", err)
+	}
+
+	return myself, nil
+}
+
 func LoadIssues() ([]*types.Issue, error) {
 	issues := []*types.Issue{}
 
