@@ -25,7 +25,7 @@ func saveRepository(repository *types.Repository) error {
 		return fmt.Errorf("cache: %w", err)
 	}
 
-	outputPath := filepath.Join(cacheRepositoryPath, repository.Name)
+	outputPath := filepath.Join(cacheRepositoryPath, fmt.Sprintf("%s.json", repository.Name))
 
 	if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
 		return fmt.Errorf("cache: %w", err)

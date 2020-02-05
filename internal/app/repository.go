@@ -2,6 +2,7 @@ package app
 
 import (
 	"backlog/internal/backlog"
+	"backlog/internal/cache"
 
 	"github.com/moutend/go-backlog/pkg/types"
 
@@ -25,41 +26,68 @@ var repositoryListCommand = &cobra.Command{
 }
 
 func repositoryListCommandRunE(cmd *cobra.Command, args []string) error {
-	projects, err := backlog.GetProjects(nil)
+	var (
+		projects     []*types.Project
+		repositories []*types.Repository
+		err          error
+	)
+
+	projects, err = backlog.GetProjects(nil)
+
+	if err != nil {
+		goto PRINT_REPOSITORIES
+	}
+	if err := cache.Save(projects); err != nil {
+		return err
+	}
+	for _, project := range projects {
+		repositories, err = backlog.GetRepositories(project.ProjectKey, nil)
+
+		if err != nil {
+			goto PRINT_REPOSITORIES
+		}
+		if err := cache.Save(repositories); err != nil {
+			return err
+		}
+	}
+
+PRINT_REPOSITORIES:
+
+	projects, err = cache.LoadProjects()
 
 	if err != nil {
 		return err
 	}
 
-	repoMap := map[uint64][]*types.Repository{}
+	repositories, err = cache.LoadRepositories()
 
-	for _, project := range projects {
-		repos, err := backlog.GetRepositories(project.ProjectKey, nil)
+	if err != nil {
+		return err
+	}
 
-		if err != nil {
-			return err
-		}
+	repositoriesMap := map[uint64][]*types.Repository{}
 
-		repoMap[project.Id] = repos
+	for _, repository := range repositories {
+		repositoriesMap[repository.ProjectId] = append(repositoriesMap[repository.ProjectId], repository)
 	}
 	for i, project := range projects {
 		cmd.Printf("# [%s] %s\n\n", project.ProjectKey, project.Name)
 
-		repos := repoMap[project.Id]
+		repositories := repositoriesMap[project.Id]
 
-		if len(repos) == 0 {
+		if len(repositories) == 0 {
 			cmd.Println("No repositories.")
 
 			goto NEXT
 		}
-		for _, repo := range repos {
-			cmd.Printf("- %s", repo.Name)
+		for _, repository := range repositories {
+			cmd.Printf("- %s", repository.Name)
 
 			if yes, _ := cmd.Flags().GetBool("url"); yes {
-				cmd.Printf(" (%s)", repo.HTTPURL)
+				cmd.Printf(" (%s)", repository.HTTPURL)
 			}
 			if yes, _ := cmd.Flags().GetBool("ssh"); yes {
-				cmd.Printf(" (%s)", repo.SSHURL)
+				cmd.Printf(" (%s)", repository.SSHURL)
 			}
 
 			cmd.Printf("\n")
