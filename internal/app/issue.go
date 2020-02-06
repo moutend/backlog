@@ -120,7 +120,7 @@ func issueListCommandRunE(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if yes, _ := cmd.Flags().GetBool("myself"); yes {
-		query.Add("assigneeId", fmt.Sprint(myself.Id))
+		query.Add("assigneeId[]", fmt.Sprint(myself.Id))
 	}
 	if priority, _ := cmd.Flags().GetString("priority"); priority != "" {
 		// query.Add("priorityId", fmt.Sprint(priority.Id))
@@ -189,7 +189,7 @@ PRINT_ISSUES:
 		})
 	}
 
-	selectAssignedMe, err := cmd.Flags().GetBool("me")
+	selectAssignedMe, err := cmd.Flags().GetBool("myself")
 	projectKey, _ := cmd.Flags().GetString("project")
 	issueStatus, _ := cmd.Flags().GetString("status")
 	issueCount := 0
@@ -416,15 +416,15 @@ func init() {
 
 	issueUpdateCommand.Flags().StringP("comment", "c", "", "Set comment")
 
-	issueListCommand.Flags().BoolP("all", "a", false, "Fetch all issues (default=false)")
-	issueListCommand.Flags().IntP("count", "c", 20, "Print issues (default=20)")
-	issueListCommand.Flags().BoolP("desc", "", true, "Print issues descending order (default=true)")
-	issueListCommand.Flags().BoolP("asc", "", false, "Print issues ascending order (default=false)")
-	issueListCommand.Flags().BoolP("myself", "", false, "Select issues which assignee is myself")
-	issueListCommand.Flags().StringP("sort", "", "created", "Specify sorting order (default='created')")
-	issueListCommand.Flags().StringP("project", "", "", "Specify issue's project key (default='')")
-	issueListCommand.Flags().StringP("status", "", "", "Specify issue status (default='')")
-	issueListCommand.Flags().StringP("priority", "", "", "Specify issue priority (default='')")
+	issueListCommand.Flags().BoolP("all", "a", false, "Fetch all issues")
+	issueListCommand.Flags().IntP("count", "c", 20, "Print issues")
+	issueListCommand.Flags().BoolP("desc", "", true, "Print issues descending order")
+	issueListCommand.Flags().BoolP("asc", "", false, "Print issues ascending order")
+	issueListCommand.Flags().BoolP("myself", "", false, "Print issues which assignee is myself")
+	issueListCommand.Flags().StringP("sort", "", "created", "Specify sorting order")
+	issueListCommand.Flags().StringP("project", "", "", "Specify issue's project key")
+	issueListCommand.Flags().StringP("status", "", "", "Specify issue status")
+	issueListCommand.Flags().StringP("priority", "", "", "Specify issue priority")
 
 	issueCommand.AddCommand(issueListCommand)
 	issueCommand.AddCommand(issueCreateCommand)
