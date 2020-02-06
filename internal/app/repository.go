@@ -32,6 +32,8 @@ func repositoryListCommandRunE(cmd *cobra.Command, args []string) error {
 		err          error
 	)
 
+	pullRequestsCountMap := map[uint64]int64{}
+
 	timeout, _ := cmd.Flags().GetDuration("timeout")
 
 	if timeout == 0 {
@@ -58,6 +60,15 @@ func repositoryListCommandRunE(cmd *cobra.Command, args []string) error {
 		}
 		if err := cache.Save(repositories); err != nil {
 			return err
+		}
+		for _, repository := range repositories {
+			pullRequestsCount, err := backlog.GetPullRequestsCount(project.ProjectKey, repository.Name)
+
+			if err != nil {
+				warn.Println(err)
+			}
+
+			pullRequestsCountMap[repository.Id] = pullRequestsCount
 		}
 	}
 
@@ -91,7 +102,7 @@ PRINT_REPOSITORIES:
 			goto NEXT
 		}
 		for _, repository := range repositories {
-			cmd.Printf("- %s", repository.Name)
+			cmd.Printf("- %s (%d pull requests)", repository.Name, pullRequestsCountMap[repository.Id])
 
 			if yes, _ := cmd.Flags().GetBool("url"); yes {
 				cmd.Printf(" (%s)", repository.HTTPURL)
