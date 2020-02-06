@@ -187,6 +187,29 @@ PRINT_ISSUES:
 		sort.Slice(issues, func(i, j int) bool {
 			return issues[i].Updated.Time().After(issues[j].Updated.Time())
 		})
+	default:
+		sort.Slice(issues, func(i, j int) bool {
+			return issues[i].Id > issues[j].Id
+		})
+
+		is := make([]*types.Issue, len(issues))
+		index := 0
+
+		for _, project := range projects {
+			for _, i := range issues {
+				if strings.HasPrefix(i.IssueKey, project.ProjectKey) {
+					if yes, _ := cmd.Flags().GetBool("asc"); yes {
+						is[len(issues)-1-index] = i
+					} else {
+						is[index] = i
+					}
+
+					index += 1
+				}
+			}
+		}
+
+		issues = is
 	}
 
 	selectAssignedMe, err := cmd.Flags().GetBool("myself")
@@ -195,7 +218,7 @@ PRINT_ISSUES:
 	issueCount := 0
 
 	for _, issue := range issues {
-		if issueCount == maxIssues {
+		if maxIssues > 0 && issueCount == maxIssues {
 			break
 		}
 		if issueStatus != "" && issue.Status.Name != issueStatus {
@@ -421,7 +444,7 @@ func init() {
 	issueListCommand.Flags().BoolP("desc", "", true, "Print issues descending order")
 	issueListCommand.Flags().BoolP("asc", "", false, "Print issues ascending order")
 	issueListCommand.Flags().BoolP("myself", "", false, "Print issues which assignee is myself")
-	issueListCommand.Flags().StringP("sort", "", "created", "Specify sorting order")
+	issueListCommand.Flags().StringP("sort", "", "", "Specify sorting order")
 	issueListCommand.Flags().StringP("project", "", "", "Specify issue's project key")
 	issueListCommand.Flags().StringP("status", "", "", "Specify issue status")
 	issueListCommand.Flags().StringP("priority", "", "", "Specify issue priority")
