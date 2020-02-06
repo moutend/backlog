@@ -10,13 +10,14 @@ const (
 )
 
 var (
-	cachePath            string
-	cacheIssuePath       string
-	cacheProjectPath     string
-	cachePullRequestPath string
-	cacheRepositoryPath  string
-	cacheUserPath        string
-	cacheWikiPath        string
+	cachePath              string
+	cacheIssuePath         string
+	cacheProjectPath       string
+	cacheProjectStatusPath string
+	cachePullRequestPath   string
+	cacheRepositoryPath    string
+	cacheUserPath          string
+	cacheWikiPath          string
 )
 
 func Setup(space string) error {
@@ -27,6 +28,7 @@ func Setup(space string) error {
 	cachePath = filepath.Join(cacheBaseDir, space)
 	cacheIssuePath = filepath.Join(cacheBaseDir, space, "issue")
 	cacheProjectPath = filepath.Join(cacheBaseDir, space, "project")
+	cacheProjectStatusPath = filepath.Join(cacheBaseDir, space, "projectstatus")
 	cachePullRequestPath = filepath.Join(cacheBaseDir, space, "pullrequest")
 	cacheRepositoryPath = filepath.Join(cacheBaseDir, space, "repository")
 	cacheUserPath = filepath.Join(cacheBaseDir, space, "user")

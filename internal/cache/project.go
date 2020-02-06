@@ -12,19 +12,6 @@ import (
 	"github.com/moutend/go-backlog/pkg/types"
 )
 
-func saveProjects(projects []*types.Project) error {
-	if projects == nil {
-		return fmt.Errorf("cache: can't save nil projects")
-	}
-	for _, project := range projects {
-		if err := saveProject(project); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func saveProject(project *types.Project) error {
 	if project == nil {
 		return fmt.Errorf("cache: can't save nil project")
@@ -46,6 +33,16 @@ func saveProject(project *types.Project) error {
 
 	if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
 		return fmt.Errorf("cache: %w", err)
+	}
+
+	return nil
+}
+
+func saveProjects(projects []*types.Project) error {
+	for _, project := range projects {
+		if err := saveProject(project); err != nil {
+			return err
+		}
 	}
 
 	return nil

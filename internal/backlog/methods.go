@@ -80,12 +80,12 @@ func GetIssuesContext(ctx context.Context, query url.Values) ([]*Issue, error) {
 	return backlogClient.GetIssuesContext(ctx, query)
 }
 
-func GetAllIssues() ([]*Issue, error) {
-	return backlogClient.GetAllIssues()
+func GetAllIssues(maxIssues int, query url.Values) ([]*Issue, error) {
+	return backlogClient.GetAllIssues(maxIssues, query)
 }
 
-func GetAllIssuesContext(ctx context.Context) ([]*Issue, error) {
-	return backlogClient.GetAllIssuesContext(ctx)
+func GetAllIssuesContext(ctx context.Context, maxIssues int, query url.Values) ([]*Issue, error) {
+	return backlogClient.GetAllIssuesContext(ctx, maxIssues, query)
 }
 
 func GetNotifications(query url.Values) ([]*Notification, error) {

@@ -7,3 +7,5 @@ require (
 	github.com/moutend/go-backlog v0.2.0
 	github.com/spf13/cobra v0.0.5
 )
+
+replace github.com/moutend/go-backlog => /Users/koyanagi/github.com/moutend/go-backlog

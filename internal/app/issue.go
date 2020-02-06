@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -35,11 +36,26 @@ var issueListCommand = &cobra.Command{
 
 func issueListCommandRunE(cmd *cobra.Command, args []string) error {
 	var (
-		myself *types.User
-		issues []*types.Issue
-		ctx    context.Context
-		err    error
+		myself          *types.User
+		projects        []*types.Project
+		projectStatuses []*types.ProjectStatus
+		issues          []*types.Issue
+
+		projectStatusesMap map[string][]*types.ProjectStatus
+		query              url.Values
+
+		ctx context.Context
+		err error
 	)
+
+	maxIssues, _ := cmd.Flags().GetInt("count")
+
+	if maxIssues == 0 {
+		return nil
+	}
+	if yes, _ := cmd.Flags().GetBool("all"); yes {
+		maxIssues = 0
+	}
 
 	timeout, _ := cmd.Flags().GetDuration("timeout")
 
@@ -55,18 +71,86 @@ func issueListCommandRunE(cmd *cobra.Command, args []string) error {
 	myself, err = backlog.GetMyself()
 
 	if err != nil {
-		// warn
+		warn.Println(err)
+
+		goto PRINT_ISSUES
 	}
 	if err := cache.SaveMyself(myself); err != nil {
 		return err
 	}
 
-	issues, err = backlog.GetAllIssuesContext(ctx)
+	projects, err = backlog.GetProjects(nil)
 
 	if err != nil {
-		// warn
+		warn.Println(err)
+
+		goto PRINT_ISSUES
 	}
-	if len(issues) == 0 {
+	if err := cache.Save(projects); err != nil {
+		return err
+	}
+
+	projectStatusesMap = map[string][]*types.ProjectStatus{}
+
+	for _, project := range projects {
+		projectStatuses, err = backlog.GetProjectStatuses(project.ProjectKey)
+
+		if err != nil {
+			warn.Println(err)
+
+			goto PRINT_ISSUES
+		}
+		if err := cache.SaveProjectStatuses(project.ProjectKey, projectStatuses); err != nil {
+			return err
+		}
+
+		projectStatusesMap[fmt.Sprint(project.Id)] = projectStatuses
+	}
+
+	query = url.Values{}
+
+	{
+		desc, _ := cmd.Flags().GetBool("desc")
+		asc, _ := cmd.Flags().GetBool("desc")
+
+		if !desc && asc {
+			query.Add("order", "asc")
+		} else {
+			query.Add("order", "desc")
+		}
+	}
+	if yes, _ := cmd.Flags().GetBool("myself"); yes {
+		query.Add("assigneeId", fmt.Sprint(myself.Id))
+	}
+	if priority, _ := cmd.Flags().GetString("priority"); priority != "" {
+		// query.Add("priorityId", fmt.Sprint(priority.Id))
+	}
+	if projectKey, _ := cmd.Flags().GetString("project"); projectKey != "" {
+		for _, project := range projects {
+			if projectKey == project.ProjectKey {
+				query.Add("projectId", fmt.Sprint(project.Id))
+
+				break
+			}
+		}
+	}
+	if status, _ := cmd.Flags().GetString("status"); status != "" && query.Get("projectId") != "" {
+		for _, projectStatus := range projectStatusesMap[query.Get("projectId")] {
+			if projectStatus.Name == status {
+				query.Add("statusId", fmt.Sprint(projectStatus.Id))
+
+				break
+			}
+		}
+	}
+	if sortedBy, _ := cmd.Flags().GetString("sort"); sortedBy != "" {
+		query.Add("sort", sortedBy)
+	}
+
+	issues, err = backlog.GetAllIssuesContext(ctx, maxIssues, query)
+
+	if err != nil {
+		warn.Println(err)
 		goto PRINT_ISSUES
 	}
 	if err := cache.Save(issues); err != nil {
@@ -80,6 +164,11 @@ PRINT_ISSUES:
 	if err != nil {
 		return err
 	}
+	projects, err = cache.LoadProjects()
+
+	if err != nil {
+		return err
+	}
 
 	issues, err = cache.LoadIssues()
 
@@ -87,13 +176,31 @@ PRINT_ISSUES:
 		return err
 	}
 
-	sort.Slice(issues, func(i, j int) bool {
-		return issues[i].Created.Time().After(issues[j].Created.Time())
-	})
+	sortedBy, _ := cmd.Flags().GetString("order")
+
+	switch strings.ToLower(sortedBy) {
+	case "created":
+		sort.Slice(issues, func(i, j int) bool {
+			return issues[i].Created.Time().After(issues[j].Created.Time())
+		})
+	case "updated":
+		sort.Slice(issues, func(i, j int) bool {
+			return issues[i].Updated.Time().After(issues[j].Updated.Time())
+		})
+	}
+
 	selectAssignedMe, err := cmd.Flags().GetBool("me")
 	projectKey, _ := cmd.Flags().GetString("project")
+	issueStatus, _ := cmd.Flags().GetString("status")
+	issueCount := 0
 
 	for _, issue := range issues {
+		if issueCount == maxIssues {
+			break
+		}
+		if issueStatus != "" && issue.Status.Name != issueStatus {
+			continue
+		}
 		if projectKey != "" && !strings.HasPrefix(issue.IssueKey, projectKey) {
 			continue
 		}
@@ -112,6 +219,8 @@ PRINT_ISSUES:
 			issue.Status.Name,
 			issue.Summary,
 		)
+
+		issueCount += 1
 	}
 
 	return nil
@@ -308,8 +417,14 @@ func init() {
 	issueUpdateCommand.Flags().StringP("comment", "c", "", "Set comment")
 
 	issueListCommand.Flags().BoolP("all", "a", false, "Fetch all issues (default=false)")
-	issueListCommand.Flags().BoolP("me", "m", false, "Select issues which assigned to me (default=false)")
-	issueListCommand.Flags().StringP("project", "p", "", "Specify issue's project")
+	issueListCommand.Flags().IntP("count", "c", 20, "Print issues (default=20)")
+	issueListCommand.Flags().BoolP("desc", "", true, "Print issues descending order (default=true)")
+	issueListCommand.Flags().BoolP("asc", "", false, "Print issues ascending order (default=false)")
+	issueListCommand.Flags().BoolP("myself", "", false, "Select issues which assignee is myself")
+	issueListCommand.Flags().StringP("sort", "", "created", "Specify sorting order (default='created')")
+	issueListCommand.Flags().StringP("project", "", "", "Specify issue's project key (default='')")
+	issueListCommand.Flags().StringP("status", "", "", "Specify issue status (default='')")
+	issueListCommand.Flags().StringP("priority", "", "", "Specify issue priority (default='')")
 
 	issueCommand.AddCommand(issueListCommand)
 	issueCommand.AddCommand(issueCreateCommand)
