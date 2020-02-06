@@ -291,10 +291,6 @@ var issueReadCommand = &cobra.Command{
 }
 
 func issueReadCommandRunE(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
-		return nil
-	}
-
 	var (
 		project     *types.Project
 		issue       *types.Issue
@@ -302,9 +298,21 @@ func issueReadCommandRunE(cmd *cobra.Command, args []string) error {
 		err         error
 	)
 
+	if len(args) < 1 {
+		return nil
+	}
+
+	timeout, _ := cmd.Flags().GetDuration("timeout")
+
+	if timeout == 0 {
+		goto PRINT_ISSUE
+	}
+
 	issue, err = backlog.GetIssue(args[0])
 
 	if err != nil {
+		warn.Println(err)
+
 		goto PRINT_ISSUE
 	}
 	if err := cache.Save(issue); err != nil {
@@ -314,6 +322,8 @@ func issueReadCommandRunE(cmd *cobra.Command, args []string) error {
 	project, err = backlog.GetProject(fmt.Sprint(*issue.ProjectId))
 
 	if err != nil {
+		warn.Println(err)
+
 		goto PRINT_ISSUE
 	}
 	if err := cache.Save(project); err != nil {
@@ -326,6 +336,8 @@ func issueReadCommandRunE(cmd *cobra.Command, args []string) error {
 	parentIssue, err = backlog.GetIssue(fmt.Sprint(*issue.ParentIssueId))
 
 	if err != nil {
+		warn.Println(err)
+
 		goto PRINT_ISSUE
 	}
 	if err := cache.Save(parentIssue); err != nil {

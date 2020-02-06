@@ -30,9 +30,17 @@ func projectListCommandRunE(cmd *cobra.Command, args []string) error {
 		err      error
 	)
 
+	timeout, _ := cmd.Flags().GetDuration("timeout")
+
+	if timeout == 0 {
+		goto PRINT_PROJECTS
+	}
+
 	projects, err = backlog.GetProjects(nil)
 
 	if err != nil {
+		warn.Println(err)
+
 		goto PRINT_PROJECTS
 	}
 	if err := cache.Save(projects); err != nil {

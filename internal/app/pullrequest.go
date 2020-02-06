@@ -60,6 +60,8 @@ func pullRequestListCommandRunE(cmd *cobra.Command, args []string) error {
 	project, err = backlog.GetProject(projectKey)
 
 	if err != nil {
+		warn.Println(err)
+
 		goto PRINT_PULLREQUESTS
 	}
 	if err := cache.Save(project); err != nil {
@@ -69,6 +71,8 @@ func pullRequestListCommandRunE(cmd *cobra.Command, args []string) error {
 	pullRequests, err = backlog.GetAllPullRequestsContext(ctx, projectKey, repositoryName)
 
 	if err != nil {
+		warn.Println(err)
+
 		goto PRINT_PULLREQUESTS
 	}
 	if err := cache.SavePullRequests(projectKey, repositoryName, pullRequests); err != nil {

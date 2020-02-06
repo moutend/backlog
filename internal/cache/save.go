@@ -15,6 +15,10 @@ func Save(v interface{}) error {
 		return saveIssue(v.(*types.Issue))
 	case []*types.Issue:
 		return saveIssues(v.([]*types.Issue))
+	case *types.Priority:
+		return savePriority(v.(*types.Priority))
+	case []*types.Priority:
+		return savePriorities(v.([]*types.Priority))
 	case *types.Project:
 		return saveProject(v.(*types.Project))
 	case []*types.Project:

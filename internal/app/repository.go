@@ -32,9 +32,17 @@ func repositoryListCommandRunE(cmd *cobra.Command, args []string) error {
 		err          error
 	)
 
+	timeout, _ := cmd.Flags().GetDuration("timeout")
+
+	if timeout == 0 {
+		goto PRINT_REPOSITORIES
+	}
+
 	projects, err = backlog.GetProjects(nil)
 
 	if err != nil {
+		warn.Println(err)
+
 		goto PRINT_REPOSITORIES
 	}
 	if err := cache.Save(projects); err != nil {
@@ -44,6 +52,8 @@ func repositoryListCommandRunE(cmd *cobra.Command, args []string) error {
 		repositories, err = backlog.GetRepositories(project.ProjectKey, nil)
 
 		if err != nil {
+			warn.Println(err)
+
 			goto PRINT_REPOSITORIES
 		}
 		if err := cache.Save(repositories); err != nil {

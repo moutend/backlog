@@ -50,9 +50,11 @@ func wikiListCommandRunE(cmd *cobra.Command, args []string) error {
 
 	ctx, _ = context.WithTimeout(context.Background(), timeout)
 
-	projects, err = backlog.GetProjectsContext(ctx, nil)
+	projects, err = backlog.GetProjects(nil)
 
 	if err != nil {
+		warn.Println(err)
+
 		goto PRINT_WIKIS
 	}
 	if err := cache.Save(projects); err != nil {
@@ -63,6 +65,8 @@ func wikiListCommandRunE(cmd *cobra.Command, args []string) error {
 		wikis, err = backlog.GetWikisContext(ctx, project.ProjectKey, nil)
 
 		if err != nil {
+			warn.Println(err)
+
 			goto PRINT_WIKIS
 		}
 		if err := cache.Save(wikis); err != nil {
