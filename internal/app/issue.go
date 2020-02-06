@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/moutend/go-backlog/pkg/types"
 
@@ -37,6 +36,7 @@ var issueListCommand = &cobra.Command{
 func issueListCommandRunE(cmd *cobra.Command, args []string) error {
 	var (
 		myself          *types.User
+		priorities      []*types.Priority
 		projects        []*types.Project
 		projectStatuses []*types.ProjectStatus
 		issues          []*types.Issue
@@ -62,9 +62,6 @@ func issueListCommandRunE(cmd *cobra.Command, args []string) error {
 	if timeout == 0 {
 		goto PRINT_ISSUES
 	}
-	if timeout > 15*time.Minute {
-		timeout = 15 * time.Minute
-	}
 
 	ctx, _ = context.WithTimeout(context.Background(), timeout)
 
@@ -76,6 +73,17 @@ func issueListCommandRunE(cmd *cobra.Command, args []string) error {
 		goto PRINT_ISSUES
 	}
 	if err := cache.SaveMyself(myself); err != nil {
+		return err
+	}
+
+	priorities, err = backlog.GetPriorities()
+
+	if err != nil {
+		warn.Println(err)
+
+		goto PRINT_ISSUES
+	}
+	if err := cache.Save(priorities); err != nil {
 		return err
 	}
 
@@ -122,8 +130,14 @@ func issueListCommandRunE(cmd *cobra.Command, args []string) error {
 	if yes, _ := cmd.Flags().GetBool("myself"); yes {
 		query.Add("assigneeId[]", fmt.Sprint(myself.Id))
 	}
-	if priority, _ := cmd.Flags().GetString("priority"); priority != "" {
-		// query.Add("priorityId", fmt.Sprint(priority.Id))
+	if priorityName, _ := cmd.Flags().GetString("priority"); priorityName != "" {
+		for _, priority := range priorities {
+			if priority.Name == priorityName {
+				query.Add("priorityId", fmt.Sprint(priority.Id))
+
+				break
+			}
+		}
 	}
 	if projectKey, _ := cmd.Flags().GetString("project"); projectKey != "" {
 		for _, project := range projects {
@@ -214,6 +228,7 @@ PRINT_ISSUES:
 	}
 
 	selectAssignedMe, err := cmd.Flags().GetBool("myself")
+	priorityName, _ := cmd.Flags().GetString("priority")
 	projectKey, _ := cmd.Flags().GetString("project")
 	issueStatus, _ := cmd.Flags().GetString("status")
 	issueCount := 0
@@ -222,7 +237,10 @@ PRINT_ISSUES:
 		if maxIssues > 0 && issueCount == maxIssues {
 			break
 		}
-		if issueStatus != "" && issue.Status.Name != issueStatus {
+		if priorityName != "" && issue.Priority != nil && issue.Priority.Name != priorityName {
+			continue
+		}
+		if issueStatus != "" && issue.Status != nil && issue.Status.Name != issueStatus {
 			continue
 		}
 		if projectKey != "" && !strings.HasPrefix(issue.IssueKey, projectKey) {
@@ -377,7 +395,7 @@ PRINT_ISSUE:
 		return err
 	}
 
-	cmd.Printf("%s", output)
+	cmd.Printf("%s\n", output)
 
 	return nil
 }

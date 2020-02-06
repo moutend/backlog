@@ -34,6 +34,7 @@ var pullRequestListCommand = &cobra.Command{
 func pullRequestListCommandRunE(cmd *cobra.Command, args []string) error {
 	var (
 		project      *types.Project
+		repository   *types.Repository
 		pullRequests []*types.PullRequest
 		ctx          context.Context
 		err          error
@@ -51,9 +52,6 @@ func pullRequestListCommandRunE(cmd *cobra.Command, args []string) error {
 	if timeout == 0 {
 		goto PRINT_PULLREQUESTS
 	}
-	if timeout > 15*time.Minute {
-		timeout = 15 * time.Minute
-	}
 
 	ctx, _ = context.WithTimeout(context.Background(), timeout)
 
@@ -68,12 +66,21 @@ func pullRequestListCommandRunE(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pullRequests, err = backlog.GetAllPullRequestsContext(ctx, projectKey, repositoryName)
+	repository, err = backlog.GetRepository(projectKey, repositoryName)
 
 	if err != nil {
 		warn.Println(err)
 
 		goto PRINT_PULLREQUESTS
+	}
+	if err := cache.Save(repository); err != nil {
+		return err
+	}
+
+	pullRequests, err = backlog.GetAllPullRequestsContext(ctx, projectKey, repositoryName)
+
+	if err != nil {
+		warn.Println(err)
 	}
 	if err := cache.SavePullRequests(projectKey, repositoryName, pullRequests); err != nil {
 		return err
