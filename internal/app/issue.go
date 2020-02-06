@@ -145,13 +145,14 @@ func issueListCommandRunE(cmd *cobra.Command, args []string) error {
 	}
 	if sortedBy, _ := cmd.Flags().GetString("sort"); sortedBy != "" {
 		query.Add("sort", sortedBy)
+	} else {
+		query.Add("sort", "created")
 	}
 
 	issues, err = backlog.GetAllIssuesContext(ctx, maxIssues, query)
 
 	if err != nil {
 		warn.Println(err)
-		goto PRINT_ISSUES
 	}
 	if err := cache.Save(issues); err != nil {
 		return err

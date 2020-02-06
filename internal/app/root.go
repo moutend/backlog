@@ -1,6 +1,8 @@
 package app
 
 import (
+	"io/ioutil"
+	"log"
 	"os"
 	"time"
 
@@ -28,11 +30,17 @@ func rootPersistentPreRunE(cmd *cobra.Command, args []string) error {
 	if yes, _ := cmd.Flags().GetBool("debug"); yes {
 		backlog.SetHTTPClient(backlog.NewDebugClient())
 	}
+	if yes, _ := cmd.Flags().GetBool("warn"); yes {
+		warn = log.New(os.Stderr, "warn: ", 0)
+	} else {
+		warn = log.New(ioutil.Discard, "warn: ", 0)
+	}
 
 	return nil
 }
 
 func init() {
 	RootCommand.PersistentFlags().BoolP("debug", "d", false, "Enable debug output")
+	RootCommand.PersistentFlags().BoolP("warn", "w", true, "Enable warn output")
 	RootCommand.PersistentFlags().DurationP("timeout", "t", time.Minute, "Set timeout value (default=60s)")
 }
