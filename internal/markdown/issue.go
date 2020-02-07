@@ -74,6 +74,12 @@ func (i *Issue) Marshal() ([]byte, error) {
 	if i.Issue.DueDate != nil {
 		fmt.Fprintf(buffer, "due: %s\n", i.Issue.DueDate.Time().Format("2006-01-02"))
 	}
+	if i.Issue.Created != nil {
+		fmt.Fprintf(buffer, "created: %s by %s\n", i.Issue.Created.Time().Format("2006-01-02"), i.Issue.CreatedUser.Name)
+	}
+	if i.Issue.Updated != nil {
+		fmt.Fprintf(buffer, "updated: %s by %s\n", i.Issue.Updated.Time().Format("2006-01-02"), i.Issue.UpdatedUser.Name)
+	}
 	if i.Issue.IssueKey != "" {
 		fmt.Fprintf(buffer, "url: https://%s/view/%s\n", backlog.SpaceName(), i.Issue.IssueKey)
 	}
