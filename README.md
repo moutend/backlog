@@ -10,65 +10,53 @@
 
 `backlog` is a CLI client for [https://backlog.jp](https://backlog.jp).
 
-# Usage
+## Prerequisites
 
-To list projects and its issues, use `list` command:
+- Go 1.13 or later
 
-```console
-backlog list
-```
+## Download
 
-To create an issue, write a markdown file like the following at first.
-
-**issue.md**
-
-```markdown
----
-summary: TODO
-project: My project
-issuetype: task
-priority: low
-status: ongoing
----
-
-# TODO
-
-- Implement XXX
-- Fix YYY
-- Delete ZZZ
-```
-
-And then use `create` command to post the issue.
+Use `go get` to download the executable.
 
 ```console
-backlog create issue.md
+go get -u github.com/moutend/backlog/cmd/backlog
 ```
 
-For more information, see `help` command.
+Or build and install by hand.
 
-# Installation
-
-## Windows / Linux
-
-You can download the executable for 32 bit / 64 bit at [GitHub releases page](https://github.com/moutend/backlog/releases/).
-
-## Mac
-
-The easiest way is Homebrew.
-
-```shell
-$ brew tap moutend/homebrew-backlog
-$ brew install backlog
+```console
+git clone https://github.com/moutend/backlog
+cd ./backlog/cmd/backlog
+go build
+go install
 ```
 
-## `go install`
+## Usage
 
-If you have already set up Go environment, just `go install`.
+Before run the `backlog`, set the following environment variables.
 
-```shell
-$ go install github.com/moutend/backlog
+- `BACKLOG_SPACE` ... Your backlog domain except `https://`.
+- `BACKLOG_TOKEN` ... API token.
+
+For example, set the environment variables like:
+
+```console
+export BACKLOG_SPACE='example.backlog.com'
+export BACKLOG_TOKEN='xxxxxxxx'
 ```
+
+Now, you're able to run the `backlog`.
+
+```console
+backlog project list
+```
+
+For more details, read `backlog help`.
 
 ## Author
 
 [Yoshiyuki Koyanagi](https://github.com/moutend)
+
+## LICENSE
+
+MIT
