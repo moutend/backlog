@@ -465,6 +465,7 @@ func issueDeleteCommandRunE(cmd *cobra.Command, args []string) error {
 
 	return nil
 }
+
 func init() {
 	RootCommand.AddCommand(issueCommand)
 

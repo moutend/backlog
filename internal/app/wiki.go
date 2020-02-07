@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/moutend/go-backlog/pkg/types"
 
@@ -43,9 +42,6 @@ func wikiListCommandRunE(cmd *cobra.Command, args []string) error {
 
 	if timeout == 0 {
 		goto PRINT_WIKIS
-	}
-	if timeout > 15*time.Minute {
-		timeout = 15 * time.Minute
 	}
 
 	ctx, _ = context.WithTimeout(context.Background(), timeout)

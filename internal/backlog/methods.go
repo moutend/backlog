@@ -16,11 +16,11 @@ func GetIssueCommentsContext(ctx context.Context, issueIdOrKey string, query url
 	return backlogClient.GetIssueCommentsContext(ctx, issueIdOrKey, query)
 }
 
-func GetPullRequestComments(projectKeyOrId, repositoryNameOrId, number string, query url.Values) ([]*Comment, error) {
+func GetPullRequestComments(projectKeyOrId, repositoryNameOrId string, number int64, query url.Values) ([]*Comment, error) {
 	return backlogClient.GetPullRequestComments(projectKeyOrId, repositoryNameOrId, number, query)
 }
 
-func GetPullRequestCommentsContext(ctx context.Context, projectKeyOrId, repositoryNameOrId string, number string, query url.Values) ([]*Comment, error) {
+func GetPullRequestCommentsContext(ctx context.Context, projectKeyOrId, repositoryNameOrId string, number int64, query url.Values) ([]*Comment, error) {
 	return backlogClient.GetPullRequestCommentsContext(ctx, projectKeyOrId, repositoryNameOrId, number, query)
 }
 
