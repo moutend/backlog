@@ -42,5 +42,5 @@ func rootPersistentPreRunE(cmd *cobra.Command, args []string) error {
 func init() {
 	RootCommand.PersistentFlags().BoolP("debug", "d", false, "Enable debug output")
 	RootCommand.PersistentFlags().BoolP("warn", "w", true, "Enable warn output")
-	RootCommand.PersistentFlags().DurationP("timeout", "t", time.Minute, "Set timeout value (default=60s)")
+	RootCommand.PersistentFlags().DurationP("timeout", "t", 30*time.Second, "Set timeout value")
 }
