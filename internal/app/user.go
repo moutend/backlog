@@ -1,8 +1,7 @@
 package app
 
 import (
-	"backlog/internal/backlog"
-
+	"github.com/moutend/backlog/internal/backlog"
 	"github.com/spf13/cobra"
 )
 

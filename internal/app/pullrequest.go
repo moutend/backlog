@@ -1,16 +1,15 @@
 package app
 
 import (
-	"backlog/internal/cache"
-	"backlog/internal/markdown"
 	"context"
 	"io/ioutil"
 	"sort"
 	"strconv"
 	"time"
 
-	"backlog/internal/backlog"
-
+	"github.com/moutend/backlog/internal/backlog"
+	"github.com/moutend/backlog/internal/cache"
+	"github.com/moutend/backlog/internal/markdown"
 	"github.com/moutend/go-backlog/pkg/types"
 	"github.com/spf13/cobra"
 )

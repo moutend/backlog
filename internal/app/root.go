@@ -6,9 +6,8 @@ import (
 	"os"
 	"time"
 
-	"backlog/internal/backlog"
-	"backlog/internal/cache"
-
+	"github.com/moutend/backlog/internal/backlog"
+	"github.com/moutend/backlog/internal/cache"
 	"github.com/spf13/cobra"
 )
 

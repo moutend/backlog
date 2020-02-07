@@ -13,8 +13,6 @@ github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANyt
 github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
-github.com/moutend/go-backlog v0.2.0 h1:9Fw7KMmlok3u6cJYl/4MhE7diyXTpLDrxoUGn5rEc5k=
-github.com/moutend/go-backlog v0.2.0/go.mod h1:LlNExeK1BcLKx1ztX0agkRXZmaz/hA0sIei+mt+OppQ=
 github.com/moutend/go-backlog v0.3.0 h1:hyyWvAYEOD3gni/6HjHBncArWPPq4u1LJvETK0sXj6Y=
 github.com/moutend/go-backlog v0.3.0/go.mod h1:LlNExeK1BcLKx1ztX0agkRXZmaz/hA0sIei+mt+OppQ=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=

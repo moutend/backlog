@@ -1,9 +1,10 @@
 package markdown
 
 import (
-	"backlog/internal/backlog"
 	"bytes"
 	"fmt"
+
+	"github.com/moutend/backlog/internal/backlog"
 
 	"github.com/ericaro/frontmatter"
 	"github.com/moutend/go-backlog/pkg/types"

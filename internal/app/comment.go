@@ -1,15 +1,13 @@
 package app
 
 import (
-	"backlog/internal/cache"
 	"net/url"
 	"sort"
 	"strconv"
 
+	"github.com/moutend/backlog/internal/backlog"
+	"github.com/moutend/backlog/internal/cache"
 	"github.com/moutend/go-backlog/pkg/types"
-
-	"backlog/internal/backlog"
-
 	"github.com/spf13/cobra"
 )
 

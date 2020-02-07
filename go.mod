@@ -1,4 +1,4 @@
-module backlog
+module github.com/moutend/backlog
 
 go 1.13
 

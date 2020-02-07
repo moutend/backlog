@@ -1,8 +1,9 @@
 package main
 
 import (
-	"backlog/internal/app"
 	"os"
+
+	"github.com/moutend/backlog/internal/app"
 )
 
 func main() {
