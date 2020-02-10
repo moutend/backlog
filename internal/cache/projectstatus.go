@@ -28,7 +28,7 @@ func SaveProjectStatus(projectKey string, projectStatus *types.ProjectStatus) er
 		return fmt.Errorf("cache: %w", err)
 	}
 
-	outputPath := filepath.Join(cacheProjectStatusPath, projectKey, fmt.Sprintf("%s.json", projectStatus.Id))
+	outputPath := filepath.Join(cacheProjectStatusPath, projectKey, fmt.Sprintf("%d.json", projectStatus.Id))
 
 	if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
 		return fmt.Errorf("cache: %w", err)
