@@ -25,7 +25,7 @@ func saveWiki(wiki *types.Wiki) error {
 		return fmt.Errorf("cache: %w", err)
 	}
 
-	outputPath := filepath.Join(cacheWikiPath, fmt.Sprintf("%s.json", wiki.Id))
+	outputPath := filepath.Join(cacheWikiPath, fmt.Sprintf("%d.json", wiki.Id))
 
 	if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
 		return fmt.Errorf("cache: %w", err)
