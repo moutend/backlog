@@ -75,6 +75,9 @@ func (i *Issue) Marshal() ([]byte, error) {
 	if i.Issue.DueDate != nil {
 		fmt.Fprintf(buffer, "due: %s\n", i.Issue.DueDate.Time().Format("2006-01-02"))
 	}
+	if i.Issue.Assignee != nil {
+		fmt.Fprintf(buffer, "assignee: %s\n", i.Issue.Assignee.Name)
+	}
 	if i.Issue.Created != nil {
 		fmt.Fprintf(buffer, "created: %s by %s\n", i.Issue.Created.Time().Format("2006-01-02"), i.Issue.CreatedUser.Name)
 	}
