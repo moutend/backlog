@@ -17,6 +17,11 @@ var RootCommand = &cobra.Command{
 }
 
 func rootPersistentPreRunE(cmd *cobra.Command, args []string) error {
+	switch cmd.Name() {
+	case "v", "version":
+		return nil
+	}
+
 	space := os.Getenv("BACKLOG_SPACE")
 	token := os.Getenv("BACKLOG_TOKEN")
 
