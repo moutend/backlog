@@ -1,9 +1,7 @@
 package app
 
 import (
-	"github.com/moutend/backlog/internal/backlog"
 	"github.com/moutend/backlog/internal/cache"
-	"github.com/moutend/go-backlog/pkg/types"
 	"github.com/spf13/cobra"
 )
 
@@ -14,23 +12,7 @@ var myselfCommand = &cobra.Command{
 }
 
 func myselfCommandRunE(cmd *cobra.Command, args []string) error {
-	var (
-		myself *types.User
-		err    error
-	)
-
-	myself, err = backlog.GetMyself()
-
-	if err != nil {
-		goto PRINT_MYSELF
-	}
-	if err := cache.SaveMyself(myself); err != nil {
-		return err
-	}
-
-PRINT_MYSELF:
-
-	myself, err = cache.LoadMyself()
+	myself, err := cache.LoadMyself()
 
 	if err != nil {
 		return err

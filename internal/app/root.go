@@ -39,6 +39,18 @@ func rootPersistentPreRunE(cmd *cobra.Command, args []string) error {
 	} else {
 		warn = log.New(ioutil.Discard, "warn: ", 0)
 	}
+	if timeout, _ := cmd.Flags().GetDuration("timeout"); timeout == 0 {
+		return nil
+	}
+
+	myself, err := backlog.GetMyself()
+
+	if err != nil {
+		return err
+	}
+	if err := cache.SaveMyself(myself); err != nil {
+		return err
+	}
 
 	return nil
 }
