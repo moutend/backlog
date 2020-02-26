@@ -21,6 +21,7 @@ var (
 	cacheRepositoryPath         string
 	cacheUserPath               string
 	cacheWikiPath               string
+	cacheWikiAttachmentPath     string
 )
 
 func Setup(space string) error {
@@ -39,6 +40,7 @@ func Setup(space string) error {
 	cacheRepositoryPath = filepath.Join(cacheBaseDir, space, "repository")
 	cacheUserPath = filepath.Join(cacheBaseDir, space, "user")
 	cacheWikiPath = filepath.Join(cacheBaseDir, space, "wiki")
+	cacheWikiAttachmentPath = filepath.Join(cacheBaseDir, space, "wiki-attachment")
 
 	return nil
 }
