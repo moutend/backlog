@@ -189,7 +189,7 @@ PRINT_ISSUES:
 		return err
 	}
 
-	sortedBy, _ := cmd.Flags().GetString("order")
+	sortedBy, _ := cmd.Flags().GetString("sort")
 
 	switch strings.ToLower(sortedBy) {
 	case "created":
