@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/ericaro/frontmatter"
+	"github.com/moutend/backlog/internal/backlog"
 	"github.com/moutend/go-backlog/pkg/types"
 )
 
 type WikiFrontMatter struct {
-	Name    string `fm:"name"`
 	Project string `fm:"project"`
-	Created string `fm:"created"`
-	Updated string `fm:"updated"`
+	Wiki    uint64 `fm:"wiki"`
+	Name    string `fm:"name"`
 	Content string `fm:"content"`
 }
 
@@ -20,31 +21,74 @@ type Wiki struct {
 	Wiki    *types.Wiki    `json:"wiki"`
 }
 
-func (i *Wiki) Marshal() ([]byte, error) {
+func (v *Wiki) Marshal() ([]byte, error) {
 	buffer := &bytes.Buffer{}
 
 	fmt.Fprintln(buffer, "---")
 
-	if i.Project != nil {
-		fmt.Fprintf(buffer, "project: %s\n", i.Project.ProjectKey)
+	if v.Project != nil {
+		fmt.Fprintf(buffer, "project: %s\n", v.Project.ProjectKey)
 	}
-	if i.Wiki == nil {
+	if v.Wiki == nil {
 		goto END_WIKI
 	}
 
-	fmt.Fprintf(buffer, "name: %q\n", i.Wiki.Name)
+	fmt.Fprintf(buffer, "wiki: %d\n", v.Wiki.Id)
+	fmt.Fprintf(buffer, "name: %q\n", v.Wiki.Name)
 
-	if i.Wiki.Created != nil {
-		fmt.Fprintf(buffer, "created: %s\n", i.Wiki.Created)
+	if v.Wiki.Created != nil {
+		fmt.Fprintf(buffer, "created: %s\n", v.Wiki.Created)
 	}
-	if i.Wiki.Updated != nil {
-		fmt.Fprintf(buffer, "updated: %s\n", i.Wiki.Updated)
+	if v.Wiki.Updated != nil {
+		fmt.Fprintf(buffer, "updated: %s\n", v.Wiki.Updated)
 	}
 
+	fmt.Fprintf(buffer, "url: https://%s/alias/wiki/%d\n", backlog.SpaceName(), v.Wiki.Id)
 	fmt.Fprintln(buffer, "---")
-	fmt.Fprintln(buffer, i.Wiki.Content)
+	fmt.Fprintln(buffer, v.Wiki.Content)
 
 END_WIKI:
 
 	return buffer.Bytes(), nil
+}
+
+func (v *Wiki) unmarshal(data []byte) error {
+	var fo WikiFrontMatter
+
+	if err := frontmatter.Unmarshal(data, &fo); err != nil {
+		return err
+	}
+	if fo.Project == "" {
+		return fmt.Errorf("markdown: project is required")
+	}
+
+	project, err := backlog.GetProject(fo.Project)
+
+	if err != nil {
+		return err
+	}
+
+	v.Project = project
+
+	if fo.Wiki != 0 {
+		wiki, err := backlog.GetWiki(fo.Wiki)
+
+		if err != nil {
+			return err
+		}
+
+		v.Wiki = wiki
+	} else {
+		v.Wiki = &types.Wiki{}
+	}
+
+	v.Wiki.ProjectId = v.Project.Id
+	v.Wiki.Name = fo.Name
+	v.Wiki.Content = fo.Content
+
+	return nil
+}
+
+func (v *Wiki) Unmarshal(data []byte) error {
+	return v.unmarshal(data)
 }
