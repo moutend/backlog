@@ -3,7 +3,10 @@ package app
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/moutend/backlog/internal/backlog"
 	"github.com/moutend/backlog/internal/cache"
@@ -84,6 +87,22 @@ PRINT_WIKIS:
 
 	wikisMap := map[uint64][]*types.Wiki{}
 
+	sortedBy, _ := cmd.Flags().GetString("sort")
+
+	switch strings.ToLower(sortedBy) {
+	case "created":
+		sort.Slice(wikis, func(i, j int) bool {
+			return wikis[i].Created.Time().After(wikis[j].Created.Time())
+		})
+	case "updated":
+		sort.Slice(wikis, func(i, j int) bool {
+			return wikis[i].Updated.Time().After(wikis[j].Updated.Time())
+		})
+	default:
+		sort.Slice(wikis, func(i, j int) bool {
+			return wikis[i].Id > wikis[j].Id
+		})
+	}
 	for _, wiki := range wikis {
 		wikisMap[wiki.ProjectId] = append(wikisMap[wiki.ProjectId], wiki)
 	}
@@ -107,6 +126,40 @@ PRINT_WIKIS:
 			cmd.Println("")
 		}
 	}
+
+	return nil
+}
+
+var wikiCreateCommand = &cobra.Command{
+	Use:     "create",
+	Aliases: []string{"c"},
+	RunE:    wikiCreateCommandRunE,
+}
+
+func wikiCreateCommandRunE(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return nil
+	}
+
+	data, err := ioutil.ReadFile(args[0])
+
+	if err != nil {
+		return err
+	}
+
+	mw := &markdown.Wiki{}
+
+	if err := mw.Unmarshal(data); err != nil {
+		return err
+	}
+
+	createdWiki, err := backlog.AddWiki(mw.Wiki, true)
+
+	if err != nil {
+		return err
+	}
+
+	cmd.Println("Created wiki:", createdWiki.Id)
 
 	return nil
 }
@@ -156,9 +209,199 @@ func wikiReadCommandRunE(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+var wikiUpdateCommand = &cobra.Command{
+	Use:     "update",
+	Aliases: []string{"u"},
+	RunE:    wikiUpdateCommandRunE,
+}
+
+func wikiUpdateCommandRunE(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return nil
+	}
+
+	data, err := ioutil.ReadFile(args[0])
+
+	if err != nil {
+		return err
+	}
+
+	mw := &markdown.Wiki{}
+
+	if err := mw.Unmarshal(data); err != nil {
+		return err
+	}
+
+	updatedWiki, err := backlog.UpdateWiki(mw.Wiki, true)
+
+	if err != nil {
+		return err
+	}
+
+	cmd.Println("Updated wiki:", updatedWiki.Id)
+
+	return nil
+}
+
+var wikiDeleteCommand = &cobra.Command{
+	Use:     "delete",
+	Aliases: []string{"d"},
+	RunE:    wikiDeleteCommandRunE,
+}
+
+func wikiDeleteCommandRunE(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return nil
+	}
+
+	i, err := strconv.Atoi(args[0])
+
+	if err != nil {
+		return err
+	}
+
+	deletedWiki, err := backlog.DeleteWiki(uint64(i))
+
+	if err != nil {
+		return err
+	}
+
+	cmd.Println("Deleted wiki:", deletedWiki.Id)
+
+	return nil
+}
+
+var wikiAttachmentCommand = &cobra.Command{
+	Use:     "attachment",
+	Aliases: []string{"a"},
+	RunE:    wikiAttachmentCommandRunE,
+}
+
+func wikiAttachmentCommandRunE(cmd *cobra.Command, args []string) error {
+	return nil
+}
+
+var wikiAttachmentListCommand = &cobra.Command{
+	Use:     "list",
+	Aliases: []string{"l"},
+	RunE:    wikiAttachmentListCommandRunE,
+}
+
+func wikiAttachmentListCommandRunE(cmd *cobra.Command, args []string) error {
+	var (
+		wiki        *types.Wiki
+		attachments []*types.Attachment
+		err         error
+	)
+	if len(args) < 0 {
+		return nil
+	}
+
+	i, err := strconv.Atoi(args[0])
+
+	if err != nil {
+		return err
+	}
+
+	wiki, err = backlog.GetWiki(uint64(i))
+
+	if err != nil {
+		goto PRINT_ATTACHMENTS
+	}
+	if err := cache.Save(wiki); err != nil {
+		return err
+	}
+
+	attachments, err = backlog.GetWikiAttachments(wiki.Id)
+
+	if err != nil {
+		goto PRINT_ATTACHMENTS
+	}
+	if err := cache.SaveWikiAttachments(wiki, attachments); err != nil {
+		return err
+	}
+
+PRINT_ATTACHMENTS:
+
+	wiki, err = cache.LoadWiki(wiki.Id)
+
+	if err != nil {
+		return err
+	}
+
+	attachments, err = cache.LoadWikiAttachments(wiki.Id)
+
+	if err != nil {
+		return err
+	}
+
+	cmd.Printf("# %s (%d)\n", wiki.Name, wiki.Id)
+
+	if len(attachments) == 0 {
+		return nil
+	}
+
+	cmd.Printf("\n")
+
+	for _, attachment := range attachments {
+		cmd.Printf("- %s (id:%d)\n", attachment.Name, attachment.Id)
+	}
+
+	return nil
+}
+
+var wikiAttachmentCreateCommand = &cobra.Command{
+	Use:     "create",
+	Aliases: []string{"c"},
+	RunE:    wikiAttachmentCreateCommandRunE,
+}
+
+func wikiAttachmentCreateCommandRunE(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return nil
+	}
+
+	cmd.Println("called")
+
+	return nil
+}
+
+var wikiAttachmentReadCommand = &cobra.Command{
+	Use:     "read",
+	Aliases: []string{"r"},
+	RunE:    wikiAttachmentReadCommandRunE,
+}
+
+func wikiAttachmentReadCommandRunE(cmd *cobra.Command, args []string) error {
+	return nil
+}
+
+var wikiAttachmentDeleteCommand = &cobra.Command{
+	Use:     "create",
+	Aliases: []string{"c"},
+	RunE:    wikiAttachmentDeleteCommandRunE,
+}
+
+func wikiAttachmentDeleteCommandRunE(cmd *cobra.Command, args []string) error {
+	return nil
+}
+
 func init() {
-	RootCommand.AddCommand(wikiCommand)
+	wikiAttachmentCommand.AddCommand(wikiAttachmentListCommand)
+	wikiAttachmentCommand.AddCommand(wikiAttachmentCreateCommand)
+	wikiAttachmentCommand.AddCommand(wikiAttachmentReadCommand)
+	wikiAttachmentCommand.AddCommand(wikiAttachmentDeleteCommand)
+	wikiCommand.AddCommand(wikiAttachmentCommand)
+
+	wikiListCommand.Flags().BoolP("desc", "", true, "Print wikis descending order")
+	wikiListCommand.Flags().BoolP("asc", "", false, "Print wikis ascending order")
+	wikiListCommand.Flags().StringP("sort", "", "", "Specify sorting order")
 
 	wikiCommand.AddCommand(wikiListCommand)
+	wikiCommand.AddCommand(wikiCreateCommand)
 	wikiCommand.AddCommand(wikiReadCommand)
+	wikiCommand.AddCommand(wikiUpdateCommand)
+	wikiCommand.AddCommand(wikiDeleteCommand)
+
+	RootCommand.AddCommand(wikiCommand)
 }
