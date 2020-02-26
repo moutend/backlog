@@ -44,6 +44,23 @@ func saveWikis(wikis []*types.Wiki) error {
 	return nil
 }
 
+func LoadWiki(wikiId uint64) (*types.Wiki, error) {
+	path := filepath.Join(cacheWikiPath, fmt.Sprintf("%d.json", wikiId))
+	data, err := ioutil.ReadFile(path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var wiki *types.Wiki
+
+	if err := json.Unmarshal(data, &wiki); err != nil {
+		return nil, err
+	}
+
+	return wiki, nil
+}
+
 func LoadWikis() ([]*types.Wiki, error) {
 	wikis := []*types.Wiki{}
 
@@ -58,13 +75,13 @@ func LoadWikis() ([]*types.Wiki, error) {
 			return err
 		}
 
-		var issue *types.Wiki
+		var wiki *types.Wiki
 
-		if err := json.Unmarshal(data, &issue); err != nil {
+		if err := json.Unmarshal(data, &wiki); err != nil {
 			return err
 		}
 
-		wikis = append(wikis, issue)
+		wikis = append(wikis, wiki)
 
 		return nil
 	})
