@@ -19,6 +19,8 @@ github.com/moutend/go-backlog v0.4.0 h1:wWulQ24KeWTDonZW0r0aMzYyJNIajQOeknS6oKeN
 github.com/moutend/go-backlog v0.4.0/go.mod h1:LlNExeK1BcLKx1ztX0agkRXZmaz/hA0sIei+mt+OppQ=
 github.com/moutend/go-backlog v0.4.1 h1:hVx92wsuYFgf9VaNuEXzpVvC8dZMs2uRKy7dkowIOGc=
 github.com/moutend/go-backlog v0.4.1/go.mod h1:LlNExeK1BcLKx1ztX0agkRXZmaz/hA0sIei+mt+OppQ=
+github.com/moutend/go-backlog v0.6.0 h1:hS1fNh/YFsE7/RybrukAoLFJgQcspUGBspOfyPi4uCo=
+github.com/moutend/go-backlog v0.6.0/go.mod h1:LlNExeK1BcLKx1ztX0agkRXZmaz/hA0sIei+mt+OppQ=
 github.com/pelletier/go-toml v1.2.0/go.mod h1:5z9KED0ma1S8pY6P1sdut58dfprrGBbd/94hg7ilaic=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
