@@ -24,7 +24,7 @@ ARGF.each do |line|
   f_params = []
 
   f_args.split(",").each do |arg|
-    f_params.push(arg.split(" ")[0])
+    f_params.push(arg.split(" "))
   end
 
   next if f_name == "SetHTTPClient"
@@ -47,7 +47,10 @@ import (
 END
 
 functions.each do |f|
-  params = f[:params].join(", ")
+  params = f[:params].map do |v|
+    next v[0] if v.size == 1
+    v[1].start_with?("...") ? "#{v[0]}..." : v[0]
+  end.join(", ")
 
   puts ""
   puts "func #{f[:name]}(#{f[:args]}) #{f[:ret]} {"

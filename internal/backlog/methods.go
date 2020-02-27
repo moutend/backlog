@@ -8,6 +8,14 @@ import (
 	. "github.com/moutend/go-backlog/pkg/types"
 )
 
+func PostAttachment(filepath string) (*Attachment, error) {
+	return backlogClient.PostAttachment(filepath)
+}
+
+func PostAttachmentContext(ctx context.Context, filepath string) (*Attachment, error) {
+	return backlogClient.PostAttachmentContext(ctx, filepath)
+}
+
 func GetIssueComments(issueIdOrKey string, query url.Values) ([]*Comment, error) {
 	return backlogClient.GetIssueComments(issueIdOrKey, query)
 }
@@ -200,6 +208,14 @@ func GetSpaceContext(ctx context.Context) (*Space, error) {
 	return backlogClient.GetSpaceContext(ctx)
 }
 
+func GetSpaceDiskUsage() (*TotalDiskUsage, error) {
+	return backlogClient.GetSpaceDiskUsage()
+}
+
+func GetSpaceDiskUsageContext(ctx context.Context) (*TotalDiskUsage, error) {
+	return backlogClient.GetSpaceDiskUsageContext(ctx)
+}
+
 func GetUsers() ([]*User, error) {
 	return backlogClient.GetUsers()
 }
@@ -216,6 +232,14 @@ func GetMyselfContext(ctx context.Context) (*User, error) {
 	return backlogClient.GetMyselfContext(ctx)
 }
 
+func AddWiki(wiki *Wiki, mailNotify bool) (*Wiki, error) {
+	return backlogClient.AddWiki(wiki, mailNotify)
+}
+
+func AddWikiContext(ctx context.Context, wiki *Wiki, mailNotify bool) (*Wiki, error) {
+	return backlogClient.AddWikiContext(ctx, wiki, mailNotify)
+}
+
 func GetWiki(wikiId uint64) (*Wiki, error) {
 	return backlogClient.GetWiki(wikiId)
 }
@@ -224,10 +248,74 @@ func GetWikiContext(ctx context.Context, wikiId uint64) (*Wiki, error) {
 	return backlogClient.GetWikiContext(ctx, wikiId)
 }
 
+func UpdateWiki(wiki *Wiki, mailNotify bool) (*Wiki, error) {
+	return backlogClient.UpdateWiki(wiki, mailNotify)
+}
+
+func UpdateWikiContext(ctx context.Context, wiki *Wiki, mailNotify bool) (*Wiki, error) {
+	return backlogClient.UpdateWikiContext(ctx, wiki, mailNotify)
+}
+
+func DeleteWiki(wikiId uint64) (*Wiki, error) {
+	return backlogClient.DeleteWiki(wikiId)
+}
+
+func DeleteWikiContext(ctx context.Context, wikiId uint64) (*Wiki, error) {
+	return backlogClient.DeleteWikiContext(ctx, wikiId)
+}
+
 func GetWikis(projectIdOrKey string, query url.Values) ([]*Wiki, error) {
 	return backlogClient.GetWikis(projectIdOrKey, query)
 }
 
 func GetWikisContext(ctx context.Context, projectIdOrKey string, query url.Values) ([]*Wiki, error) {
 	return backlogClient.GetWikisContext(ctx, projectIdOrKey, query)
+}
+
+func GetWikiCount(projectIdOrKey string) (int, error) {
+	return backlogClient.GetWikiCount(projectIdOrKey)
+}
+
+func GetWikiCountContext(ctx context.Context, projectIdOrKey string) (int, error) {
+	return backlogClient.GetWikiCountContext(ctx, projectIdOrKey)
+}
+
+func GetWikiTags(projectIdOrKey string) ([]*Tag, error) {
+	return backlogClient.GetWikiTags(projectIdOrKey)
+}
+
+func GetWikiTagsContext(ctx context.Context, projectIdOrKey string) ([]*Tag, error) {
+	return backlogClient.GetWikiTagsContext(ctx, projectIdOrKey)
+}
+
+func GetWikiAttachments(wikiId uint64) ([]*Attachment, error) {
+	return backlogClient.GetWikiAttachments(wikiId)
+}
+
+func GetWikiAttachmentsContext(ctx context.Context, wikiId uint64) ([]*Attachment, error) {
+	return backlogClient.GetWikiAttachmentsContext(ctx, wikiId)
+}
+
+func DeleteWikiAttachment(wikiId, attachmentId uint64) (*Attachment, error) {
+	return backlogClient.DeleteWikiAttachment(wikiId, attachmentId)
+}
+
+func DeleteWikiAttachmentContext(ctx context.Context, wikiId, attachmentId uint64) (*Attachment, error) {
+	return backlogClient.DeleteWikiAttachmentContext(ctx, wikiId, attachmentId)
+}
+
+func AddWikiAttachments(wikiId uint64, filepaths ...string) ([]*Attachment, error) {
+	return backlogClient.AddWikiAttachments(wikiId, filepaths...)
+}
+
+func AddWikiAttachmentsContext(ctx context.Context, wikiId uint64, filepaths ...string) ([]*Attachment, error) {
+	return backlogClient.AddWikiAttachmentsContext(ctx, wikiId, filepaths...)
+}
+
+func DownloadWikiAttachment(wikiId, attachmentId uint64) (data []byte, filename string, err error) {
+	return backlogClient.DownloadWikiAttachment(wikiId, attachmentId)
+}
+
+func DownloadWikiAttachmentContext(ctx context.Context, wikiId, attachmentId uint64) (data []byte, filename string, err error) {
+	return backlogClient.DownloadWikiAttachmentContext(ctx, wikiId, attachmentId)
 }

@@ -1,6 +1,8 @@
 package backlog
 
 import (
+	"net/http"
+
 	"github.com/moutend/go-backlog/pkg/client"
 )
 
@@ -9,8 +11,8 @@ var (
 	backlogSpaceName string
 )
 
-func Setup(space, token string) error {
-	c, err := client.New(space, token)
+func Setup(space, token string, debugClient *http.Client) error {
+	c, err := client.New(space, token, client.OptionHTTPClient(debugClient))
 
 	if err != nil {
 		return err
@@ -24,8 +26,4 @@ func Setup(space, token string) error {
 
 func SpaceName() string {
 	return backlogSpaceName
-}
-
-func SetHTTPClient(hc client.HTTPClient) {
-	backlogClient.SetHTTPClient(hc)
 }
