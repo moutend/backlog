@@ -20,7 +20,8 @@ func SaveWikiAttachment(wiki *types.Wiki, attachment *types.Attachment) error {
 	}
 
 	// Ensure the output directory exists.
-	os.MkdirAll(cacheWikiAttachmentPath, 0755)
+	basePath := filepath.Join(cacheWikiAttachmentPath, fmt.Sprint(wiki.Id))
+	os.MkdirAll(basePath, 0755)
 
 	data, err := json.Marshal(attachment)
 
@@ -28,7 +29,7 @@ func SaveWikiAttachment(wiki *types.Wiki, attachment *types.Attachment) error {
 		return fmt.Errorf("cache: %w", err)
 	}
 
-	outputPath := filepath.Join(cacheWikiAttachmentPath, fmt.Sprint(wiki.Id), fmt.Sprintf("%d.json", attachment.Id))
+	outputPath := filepath.Join(basePath, fmt.Sprintf("%d.json", attachment.Id))
 
 	if err := ioutil.WriteFile(outputPath, data, 0644); err != nil {
 		return fmt.Errorf("cache: %w", err)
