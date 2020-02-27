@@ -357,11 +357,31 @@ var wikiAttachmentCreateCommand = &cobra.Command{
 }
 
 func wikiAttachmentCreateCommandRunE(cmd *cobra.Command, args []string) error {
-	if len(args) < 1 {
+	if len(args) < 2 {
 		return nil
 	}
 
-	cmd.Println("called")
+	i, err := strconv.Atoi(args[0])
+
+	if err != nil {
+		return err
+	}
+
+	wiki, err := backlog.GetWiki(uint64(i))
+
+	if err != nil {
+		return err
+	}
+
+	attachments, err := backlog.AddWikiAttachments(wiki.Id, args[1:]...)
+
+	if err != nil {
+		return err
+	}
+
+	for _, attachment := range attachments {
+		cmd.Printf("Created wiki attachment: %s (id:%d)\n", attachment.Name, attachment.Id)
+	}
 
 	return nil
 }
@@ -373,6 +393,40 @@ var wikiAttachmentReadCommand = &cobra.Command{
 }
 
 func wikiAttachmentReadCommandRunE(cmd *cobra.Command, args []string) error {
+	if len(args) < 2 {
+		return nil
+	}
+
+	i, err := strconv.Atoi(args[0])
+
+	if err != nil {
+		return err
+	}
+
+	wiki, err := backlog.GetWiki(uint64(i))
+
+	if err != nil {
+		return err
+	}
+
+	i, err = strconv.Atoi(args[1])
+
+	if err != nil {
+		return err
+	}
+
+	data, filename, err := backlog.DownloadWikiAttachment(wiki.Id, uint64(i))
+
+	if err != nil {
+		return err
+	}
+
+	if err := ioutil.WriteFile(filename, data, 0644); err != nil {
+		return err
+	}
+
+	cmd.Println("Downloaded wiki attachment:", filename)
+
 	return nil
 }
 

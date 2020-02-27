@@ -3,6 +3,7 @@ package app
 import (
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -24,15 +25,16 @@ func rootPersistentPreRunE(cmd *cobra.Command, args []string) error {
 
 	space := os.Getenv("BACKLOG_SPACE")
 	token := os.Getenv("BACKLOG_TOKEN")
+	debugClient := &http.Client{}
 
-	if err := backlog.Setup(space, token); err != nil {
+	if yes, _ := cmd.Flags().GetBool("debug"); yes {
+		debugClient = backlog.NewDebugClient()
+	}
+	if err := backlog.Setup(space, token, debugClient); err != nil {
 		return err
 	}
 	if err := cache.Setup(space); err != nil {
 		return err
-	}
-	if yes, _ := cmd.Flags().GetBool("debug"); yes {
-		backlog.SetHTTPClient(backlog.NewDebugClient())
 	}
 	if yes, _ := cmd.Flags().GetBool("warn"); yes {
 		warn = log.New(os.Stderr, "warn: ", 0)
