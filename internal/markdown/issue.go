@@ -96,7 +96,7 @@ END_ISSUE:
 	return buffer.Bytes(), nil
 }
 
-func (i *Issue) unmarshal(data []byte) error {
+func (v *Issue) unmarshal(data []byte) error {
 	var fo IssueFrontMatter
 
 	if err := frontmatter.Unmarshal(data, &fo); err != nil {
@@ -112,26 +112,26 @@ func (i *Issue) unmarshal(data []byte) error {
 		return err
 	}
 
-	i.Project = project
+	v.Project = project
 
-	i.Issue = &types.Issue{}
-
-	i.Issue.Summary = fo.Summary
-	i.Issue.Description = fo.Content
-	i.Issue.IssueKey = fo.Issue
-	i.Issue.ProjectId = &project.Id
+	v.Issue = &types.Issue{
+		Summary:     fo.Summary,
+		Description: fo.Content,
+		IssueKey:    fo.Issue,
+		ProjectId:   &project.Id,
+	}
 
 	if fo.Estimated != nil {
-		i.Issue.EstimatedHours = types.NewHours(*fo.Estimated)
+		v.Issue.EstimatedHours = types.NewHours(*fo.Estimated)
 	}
 	if fo.Actual != nil {
-		i.Issue.ActualHours = types.NewHours(*fo.Actual)
+		v.Issue.ActualHours = types.NewHours(*fo.Actual)
 	}
 	if fo.Start != "" {
-		i.Issue.StartDate = types.NewDate(fo.Start)
+		v.Issue.StartDate = types.NewDate(fo.Start)
 	}
 	if fo.Due != "" {
-		i.Issue.DueDate = types.NewDate(fo.Due)
+		v.Issue.DueDate = types.NewDate(fo.Due)
 	}
 	if fo.Parent != "" {
 		parent, err := backlog.GetIssue(fo.Parent)
@@ -140,9 +140,8 @@ func (i *Issue) unmarshal(data []byte) error {
 			return err
 		}
 
-		i.ParentIssue = parent
-
-		i.Issue.ParentIssueId = &parent.Id
+		v.ParentIssue = parent
+		v.Issue.ParentIssueId = &parent.Id
 	}
 
 	issueTypes, err := backlog.GetIssueTypes(project.ProjectKey)
@@ -152,12 +151,12 @@ func (i *Issue) unmarshal(data []byte) error {
 	}
 	for _, issueType := range issueTypes {
 		if fo.Type == issueType.Name {
-			i.Issue.IssueType = issueType
+			v.Issue.IssueType = issueType
 
 			break
 		}
 	}
-	if i.Issue.IssueType == nil {
+	if v.Issue.IssueType == nil {
 		return fmt.Errorf("markdown: invalid issue type")
 	}
 
@@ -168,12 +167,12 @@ func (i *Issue) unmarshal(data []byte) error {
 	}
 	for _, priority := range priorities {
 		if fo.Priority == priority.Name {
-			i.Issue.Priority = priority
+			v.Issue.Priority = priority
 
 			break
 		}
 	}
-	if i.Issue.Priority == nil {
+	if v.Issue.Priority == nil {
 		return fmt.Errorf("markdown: invalid priority")
 	}
 
@@ -184,18 +183,18 @@ func (i *Issue) unmarshal(data []byte) error {
 	}
 	for _, projectStatus := range projectStatuses {
 		if fo.Status == projectStatus.Name {
-			i.Issue.Status = projectStatus
+			v.Issue.Status = projectStatus
 
 			break
 		}
 	}
-	if i.Issue.Status == nil {
+	if v.Issue.Status == nil {
 		return fmt.Errorf("markdown: invalid status")
 	}
 
 	return nil
 }
 
-func (i *Issue) Unmarshal(data []byte) error {
-	return i.unmarshal(data)
+func (v *Issue) Unmarshal(data []byte) error {
+	return v.unmarshal(data)
 }
