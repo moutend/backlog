@@ -42,10 +42,11 @@ func NewDebugClient() *http.Client {
 
 		logger.Printf("HTTP Request: %v %v\n", req.Method, req.URL)
 
-		if len(reqBody) > 0 {
+		if len(reqBody) > 1024 {
 			logger.Printf("HTTP Payload: (%d bytes)\n", len(reqBody))
+		} else if len(reqBody) != 0 {
+			logger.Printf("HTTP Payload: %s (%d bytes)\n", reqBody, len(reqBody))
 		}
-
 		res, err := http.DefaultClient.Do(req)
 
 		if err != nil {
